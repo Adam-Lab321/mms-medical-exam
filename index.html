@@ -280,6 +280,38 @@ body.memo-open .edge-crest{
   .promo.promo-collapsed strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100vw - 56px)}
 }
 .promo.promo-hidden{display:none !important}
+
+/* ===== Агитационный блок ===== */
+.agit{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:16px;align-items:center;
+  margin-bottom:12px;padding:12px 14px 12px 18px;overflow:hidden;
+  border:1px solid var(--border);border-radius:12px;
+  background:linear-gradient(120deg,rgba(212,175,55,.09),rgba(16,14,11,.92))}
+.agit::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 3px 3px 0;
+  background:linear-gradient(180deg,var(--gold-l),var(--gold-d))}
+.agit-eyebrow{font-family:Cinzel,serif;font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:5px}
+.agit-text{font-size:.92rem;line-height:1.5;color:var(--text)}
+.agit-text em{font-style:normal;color:var(--gold-l)}
+.agit-meta{margin-top:7px;font-size:.78rem;color:var(--muted);letter-spacing:.04em}
+.agit-thumb{position:relative;display:block;width:100%;aspect-ratio:16/9;padding:0;cursor:pointer;
+  border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#000;transition:.2s}
+.agit-thumb:hover{border-color:var(--gold);box-shadow:0 0 18px rgba(212,175,55,.2)}
+.agit-thumb img{width:100%;height:100%;object-fit:cover;opacity:.8;display:block;transition:.2s}
+.agit-thumb:hover img{opacity:1}
+.agit-thumb .ply{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:34px;height:34px;border-radius:50%;background:rgba(212,175,55,.95);color:#111;
+  display:flex;align-items:center;justify-content:center;font-size:13px;padding-left:2px}
+.agit-thumb .cap{position:absolute;left:6px;bottom:4px;font-size:.62rem;letter-spacing:.1em;
+  text-transform:uppercase;color:#fff;text-shadow:0 1px 4px #000}
+.agit-player{display:none;grid-column:1/-1}
+.agit.open{grid-template-columns:1fr}
+.agit.open .agit-thumb{display:none}
+.agit.open .agit-player{display:block}
+.agit-stage{position:relative;width:100%;aspect-ratio:16/9;max-height:min(46vh,380px);
+  border-radius:9px;overflow:hidden;background:#000;border:1px solid var(--border);margin:0 auto}
+.agit-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.agit-close{margin-top:8px;font-size:.78rem;padding:6px 12px}
+@media(max-width:600px){.agit{grid-template-columns:minmax(0,1fr) 110px;gap:10px;padding:10px 10px 10px 14px}
+  .agit-text{font-size:.82rem}.agit-thumb .cap{display:none}.agit-thumb .ply{width:26px;height:26px;font-size:10px}}
 </style>
 </head>
 <body>
@@ -351,7 +383,7 @@ body.memo-open .edge-crest{
         <div class="c"><img class="logo-img" src="data:image/png;base64,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" alt="MMS" /></div>
         <div>
           <h1>Тест по военной медицине</h1>
-          <p>15 вопросов · памятка и видео</p>
+          
         </div>
       </div>
       <div class="top-actions">
@@ -362,7 +394,23 @@ body.memo-open .edge-crest{
       </div>
     </header>
     <div class="main">
-      <div class="memo-banner" id="memoBanner">
+      <section class="agit" id="agit">
+  <div class="agit-info">
+    <div class="agit-eyebrow">MMS · S.A.N.G.</div>
+    <div class="agit-text">Военная медицина — это не тыл, а передовая. Мы выходим туда, где стреляют, и возвращаем бойцов в строй. <em>Жизнь бойца — наш главный приоритет.</em></div>
+    <div class="agit-meta">15 вопросов · памятка и видео</div>
+  </div>
+  <button type="button" class="agit-thumb" id="agitPlay" aria-label="Смотреть видео об отделе">
+    <img src="https://i.ytimg.com/vi/7N9yyX1_3mI/hqdefault.jpg" alt="" loading="lazy" />
+    <span class="ply">▶</span>
+    <span class="cap">О нас · видео</span>
+  </button>
+  <div class="agit-player" id="agitPlayer">
+    <div class="agit-stage" id="agitStage"></div>
+    <button type="button" class="btn agit-close" id="agitClose">✕ Свернуть</button>
+  </div>
+</section>
+<div class="memo-banner" id="memoBanner">
         <div>
           <div class="t">Памятка по медицине</div>
           <div class="d">Зоны, реанимация, бинты, отравления — откройте перед тестом.</div>
@@ -885,6 +933,27 @@ function shuffleQuestions(){
   })();
 
   if(loadP()) start(false);
+})();
+</script>
+<script>
+(function(){
+  var YT='7N9yyX1_3mI', box=document.getElementById('agit');
+  if(!box) return;
+  var stage=document.getElementById('agitStage');
+  document.getElementById('agitPlay').addEventListener('click',function(){
+    stage.innerHTML='';
+    var f=document.createElement('iframe');
+    f.src='https://www.youtube-nocookie.com/embed/'+YT+'?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    f.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';
+    f.allowFullscreen=true;
+    f.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+    stage.appendChild(f);
+    box.classList.add('open');
+  });
+  document.getElementById('agitClose').addEventListener('click',function(){
+    stage.innerHTML='';
+    box.classList.remove('open');
+  });
 })();
 </script>
 </body>
