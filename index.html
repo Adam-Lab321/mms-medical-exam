@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>MMS · Медицинский экзамен</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2212%22%20fill%3D%22%230a0908%22/%3E%3Cpath%20d%3D%22M32%2010%20L36.5%2024.5%20L52%2025%20L39.5%2034.5%20L44%2049%20L32%2040.5%20L20%2049%20L24.5%2034.5%20L12%2025%20L27.5%2024.5%20Z%22%20fill%3D%22%23d4af37%22/%3E%3C/svg%3E" />
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Oswald:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
 <style>
 :root{--gold:#d4af37;--gold-d:#b8960f;--gold-l:#e8c84a;--bg:#080706;--text:#ebe4d8;--muted:#958c78;--border:rgba(212,175,55,.28);--soft:rgba(212,175,55,.1);--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--side-w:260px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -309,9 +309,51 @@ body.memo-open .edge-crest{
 .agit-stage{position:relative;width:100%;aspect-ratio:16/9;max-height:min(46vh,380px);
   border-radius:9px;overflow:hidden;background:#000;border:1px solid var(--border);margin:0 auto}
 .agit-stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.agit-cta{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:.9rem;font-weight:600;
+  color:var(--gold-l);text-decoration:none;padding-bottom:2px;border-bottom:1px solid rgba(212,175,55,.45);transition:.2s}
+.agit-cta:hover{color:#fff;border-bottom-color:var(--gold);letter-spacing:.01em}
+.agit-cta span{transition:transform .2s}.agit-cta:hover span{transform:translateX(3px)}
 .agit-close{margin-top:8px;font-size:.78rem;padding:6px 12px}
 @media(max-width:600px){.agit{grid-template-columns:minmax(0,1fr) 110px;gap:10px;padding:10px 10px 10px 14px}
   .agit-text{font-size:.82rem}.agit-thumb .cap{display:none}.agit-thumb .ply{width:26px;height:26px;font-size:10px}}
+/* ===== Примечание про ранг ===== */
+.agit-note{margin-top:5px;font-size:.74rem;font-style:italic;line-height:1.35;color:rgba(235,228,216,.8)}
+/* ===== Подсказки к ошибкам ===== */
+.mark{position:relative}
+.q-hint{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;margin-left:8px;
+  border-radius:50%;border:1px solid currentColor;font-size:11px;font-weight:700;line-height:1;
+  cursor:help;vertical-align:middle;opacity:.85;outline:none;transition:.15s;font-style:normal}
+.q-hint:hover,.q-hint:focus,.q-hint.show{opacity:1;background:rgba(248,113,113,.2)}
+.q-hint::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);
+  width:max-content;max-width:min(300px,100%);padding:7px 10px;border-radius:8px;
+  background:#1a1610;border:1px solid var(--gold);color:var(--text);
+  font-size:.76rem;font-weight:400;line-height:1.35;text-align:left;white-space:normal;
+  opacity:0;transform:translateY(4px);pointer-events:none;transition:.15s;z-index:30;
+  box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.q-hint:hover::after,.q-hint:focus::after,.q-hint.show::after{opacity:1;transform:translateY(0)}
+/* ===== Окно поздравления ===== */
+.cg-overlay{display:none;position:fixed;inset:0;z-index:12500;background:rgba(0,0,0,.72);
+  align-items:center;justify-content:center;padding:16px}
+.cg-overlay.show{display:flex}
+.cg-box{width:min(420px,100%);text-align:center;padding:30px 22px 22px;border-radius:16px;
+  background:linear-gradient(165deg,#1a1610,#0e0c0a);border:1px solid var(--gold);
+  box-shadow:0 24px 70px rgba(0,0,0,.65),0 0 40px rgba(212,175,55,.18);
+  animation:cgIn .35s cubic-bezier(.2,1.2,.4,1)}
+@keyframes cgIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.cg-medal{width:58px;height:58px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:28px;font-weight:700;color:#0a0805;
+  background:linear-gradient(135deg,var(--gold-l),var(--gold-d));box-shadow:0 0 24px rgba(212,175,55,.45)}
+.cg-box h3{font-family:Cinzel,serif;color:var(--gold);font-size:1.45rem;letter-spacing:.04em;margin-bottom:6px}
+.cg-name{font-size:1.15rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.cg-lead{font-size:1rem;color:var(--gold-l);margin-bottom:10px}
+.cg-sub{font-size:.82rem;color:var(--muted);margin-bottom:16px}
+#confetti{display:none;position:fixed;inset:0;width:100%;height:100%;z-index:13000;pointer-events:none}
+/* ===== Заголовок теста ===== */
+.brand h1{font-family:'Playfair Display',Georgia,'Times New Roman',serif;font-weight:700;
+  font-size:clamp(1.3rem,3.6vw,1.9rem);letter-spacing:.07em;text-transform:uppercase;line-height:1.15;
+  background:linear-gradient(180deg,#f6dd7a,#c9a227);-webkit-background-clip:text;background-clip:text;
+  color:transparent;filter:drop-shadow(0 2px 10px rgba(212,175,55,.28))}
+.cg-box h3{font-family:'Playfair Display',Georgia,serif}
 </style>
 </head>
 <body>
@@ -380,7 +422,6 @@ body.memo-open .edge-crest{
   <div class="shell">
     <header class="topbar">
       <div class="brand">
-        <div class="c"><img class="logo-img" src="data:image/png;base64,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" alt="MMS" /></div>
         <div>
           <h1>Тест по военной медицине</h1>
           
@@ -398,6 +439,8 @@ body.memo-open .edge-crest{
   <div class="agit-info">
     <div class="agit-eyebrow">MMS · S.A.N.G.</div>
     <div class="agit-text">Военная медицина — это не тыл, а передовая. Мы выходим туда, где стреляют, и возвращаем бойцов в строй. <em>Жизнь бойца — наш главный приоритет.</em></div>
+    <a class="agit-cta" href="https://discord.com/channels/1482047719697678498/1483282829340049550" target="_blank" rel="noopener">Подавайте заявку в наш отдел <span>→</span></a>
+    <div class="agit-note">Перевод в отдел открывается с 3-го ранга.</div>
     <div class="agit-meta">15 вопросов · памятка и видео</div>
   </div>
   <button type="button" class="agit-thumb" id="agitPlay" aria-label="Смотреть видео об отделе">
@@ -463,14 +506,28 @@ body.memo-open .edge-crest{
     </div>
   </div>
 </div>
+<div class="cg-overlay" id="congrats" role="dialog" aria-modal="true" aria-labelledby="cgTitle">
+  <div class="cg-box">
+    <div class="cg-medal">✓</div>
+    <h3 id="cgTitle">Поздравляем!</h3>
+    <div class="cg-name" id="cgName"></div>
+    <div class="cg-lead">Ты справился — 15 из 15.</div>
+    <div class="cg-sub" id="cgSub"></div>
+    <button type="button" class="btn btn-gold" id="cgOk" style="width:auto;min-width:140px">Закрыть</button>
+  </div>
+</div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<div class="dlg-overlay" id="goDoor" role="dialog" aria-modal="true">
+  <div class="dlg-box">
+    <h3>Кнопка для сотрудников MMS</h3>
+    <p>Она ведёт в основной раздел MMS и нужна сотрудникам. Если вы академик, вам туда не нужно: просто продолжайте экзамен. Если перейдёте сейчас, текущие ответы теста не сохранятся.</p>
+    <div class="dlg-actions">
+      <button type="button" class="btn" id="goDoorNo" style="width:auto;min-width:110px">Отмена</button>
+      <button type="button" class="btn btn-gold" id="goDoorYes" style="width:auto;min-width:110px">Перейти</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
-
-<aside class="promo promo-collapsed" id="promo" aria-label="MMS">
-  <button type="button" class="promo-x" id="promoClose" title="Скрыть" aria-label="Скрыть">×</button>
-  <strong id="promoToggle">«Жизнь бойца — наш главный приоритет»</strong>
-  <p>MMS · S.A.N.G. — элитная военная медицина: от Форта-Занкудо до операций под огнём. Боеспособность и жизнь личного состава — наша задача.</p>
-  <a href="https://discord.com/channels/1482047719697678498/1483282829340049550" target="_blank" rel="noopener">Подать заявку в Discord →</a>
-</aside>
 
 <div class="ver">mms-exam · v3.12</div>
 
@@ -485,7 +542,24 @@ var CONFIG={
   WORKER_URL:'https://mms-report-proxy.asakulin874.workers.dev'
 };
 var QUESTIONS_BANK=[{"id": "q1", "text": "Вы видите раненого сослуживца. Со стороны противника идут периодические перестрелки, но огонь можно предвидеть, рядом есть укрытия и коридоры для перемещения. К какой зоне относится местность?", "options": ["Красная зона — эвакуация невозможна, ждать подавления огня", "Жёлтая зона — эвакуация возможна под прикрытием сил поддержки", "Зелёная зона — можно спокойно организовывать ПМП на месте", "Цвет зоны не важен, главное — скорость эвакуации"]}, {"id": "q2", "text": "Боец без сознания, у вас есть только эпинефрин, дефибриллятора нет. Какова примерная вероятность и скорость реанимации?", "options": ["100% за 4 секунды", "50% за 10 секунд", "75% за 4 секунды", "Реанимация невозможна без дефибриллятора"]}, {"id": "q3", "text": "У вас есть и эпинефрин, и дефибриллятор, но нет адреналина. Стоит ли использовать дефибриллятор?", "options": ["Нет, дефибриллятор бесполезен без адреномиметика вообще", "Да — сначала эпинефрин, затем дефибриллятор повышает шанс успеха до 100%", "Да, но только дефибриллятор, без препарата", "Дефибриллятор нужно использовать первым, а препарат потом"]}, {"id": "q4", "text": "На относительно безопасной территории нет вражеского огня, есть транспорт для эвакуации в госпиталь. Какая это зона и что в ней можно делать?", "options": ["Красная зона — нужно немедленно покинуть территорию", "Жёлтая зона — эвакуация только под прикрытием", "Зелёная зона — можно спокойно организовать ПМП и эвакуацию", "Такая зона не описана в материалах"]}, {"id": "q5", "text": "У бойца рвота раз в час, потеря 10 HP каждые 30 минут и удвоенный расход еды/воды. Что это за состояние и чем лечить?", "options": ["Простуда — Азитромицин", "Отравление — Активированный уголь", "Диарея — Активированный уголь", "Сотрясение мозга — Кодеиновые таблетки"]}, {"id": "q6", "text": "У сослуживца лёгкое ранение, кровотечение, сознание сохранено, HP падает медленно. У вас есть и бинты, и кодеиновые таблетки. Что разумнее использовать сначала?", "options": ["Кодеиновые таблетки — они восстанавливают больше HP мгновенно", "Бинты — они для лёгких травм, а таблетки лучше приберечь для критического случая", "Оба средства одновременно для максимального эффекта", "Ничего не использовать, пока HP не упадёт до нуля"]}, {"id": "q7", "text": "Боец без сознания лежит в центре открытого поля. На мини-карте над ним красный череп. Вы не видите противника, но не уверены на 100%, что зона безопасна. Каковы первые шаги?", "options": ["Сразу вводить эпинефрин на месте, где он упал", "Оценить зону, убедиться в безопасности, перенести в укрытие и только потом начинать реанимацию", "Оставить его и вызвать врача по рации, самому не подходить", "Сразу применить дефибриллятор, не тратя время на переноску"]}, {"id": "q8", "text": "На поле боя идёт плотный огонь с применением тяжёлого вооружения, эвакуационная техника недоступна. К какой зоне это относится?", "options": ["Красная зона", "Жёлтая зона", "Зелёная зона", "Нейтральная зона"]}, {"id": "q9", "text": "Пострадавший в сознании, вы собираетесь ввести эпинефрин и начать СЛР (Сердечно-легочная реанимация). Что нужно сделать перед началом этих действий?", "options": ["Ничего, сразу приступать к инъекции", "Сообщить пострадавшему о своих действиях перед началом инъекции и СЛР", "Дождаться, пока он потеряет сознание сам", "Спросить письменное разрешение на дефибриллятор"]}, {"id": "q10", "text": "Вы обнаружили сослуживца, потерявшего сознание, издалека. Как мини-карта подскажет вам, что человек без сознания?", "options": ["Он будет обозначен зелёным цветом и иконкой сердца", "Он будет обозначен серым цветом, а над головой — красный череп", "Он будет мигать жёлтым без дополнительных иконок", "Мини-карта не показывает состояние здоровья бойцов"]}, {"id": "q11", "text": "У бойца растяжение и лёгкая контузия после близкого разрыва, сознание сохранено, кровотечения нет, но боеспособность снижена. К какой категории отнесено это состояние и чем в первую очередь помочь?", "options": ["Критическая травма — немедленно эпинефрин и дефибриллятор", "Дополнительная травма (не смертельная) — можно применить бинты", "Это заболевание, а не травма — нужен Азитромицин", "Это состояние не описано в материалах, помощь не требуется"]}, {"id": "q12", "text": "Как часто можно повторно использовать бинт и сколько HP он восстанавливает за один раз?", "options": ["25 HP, каждые 3–4 секунды", "100 HP, мгновенно, без задержки", "10 HP, раз в минуту", "50 HP, раз в 10 секунд"]}, {"id": "q13", "text": "Вы обнаружили, что боец потерял сознание из-за атаки одиночного нападавшего, который всё ещё находится рядом. Каковы ваши первые действия?", "options": ["Сразу подбежать и начать реанимацию, не обращая внимания на нападавшего", "Сначала удостовериться в отсутствии опасности со стороны нападающего, затем в безопасной обстановке применить дефибриллятор или эпинефрин.", "Дождаться, пока нападавший уйдёт сам, ничего не предпринимая", "Вызвать эвакуацию и больше ничего не делать"]}, {"id": "q14", "text": "Во время боя у вас осталось мало HP, а бронежилет полностью исчерпан. Каковы правильные действия?", "options": ["Продолжать бой без изменений — HP и броня не связаны", "Найти укрытие, использовать аптечку и надеть новый бронежилет", "Немедленно ввести эпинефрин, даже если сознание не потеряно", "Снять оставшуюся экипировку для скорости передвижения"]}, {"id": "q15", "text": "Расставьте по порядку действия при обнаружении бойца без сознания в зоне, где не исключена опасность: 1) реанимация, 2) взять на руки, 3) убедиться в безопасности, 4) перенести в укрытие.", "options": ["1 → 2 → 3 → 4", "2 → 4 → 3 → 1", "3 → 1 → 2 → 4", "4 → 2 → 1 → 3"]}];
-var _p=[9, 10, 11, 8, 10, 11, 9, 11, 12, 9, 10, 12, 9, 10, 11];
+var HINTS={
+ q1:'Памятка → «Зоны для оказания ПМП»: сравни описания всех трёх зон.',
+ q2:'Памятка → «Алгоритм действий», п. 2 «Введение адреномиметика».',
+ q3:'Памятка → «Алгоритм действий», п. 3 «Дефибрилляция».',
+ q4:'Памятка → «Зоны для оказания ПМП»: сравни описания зон.',
+ q5:'Памятка → «Основные заболевания и принципы лечения»: сверь симптомы.',
+ q6:'Памятка → «Дополнительная медицинская помощь»: для кого предназначено каждое средство.',
+ q7:'Памятка → «Меры по возвращению военнослужащего в боевое состояние», пп. 1–3.',
+ q8:'Памятка → «Зоны для оказания ПМП»: признаки зон.',
+ q9:'Памятка → «Алгоритм действий», п. 5 «Информирование».',
+ q10:'Памятка → «Зоны для оказания ПМП»: абзац про мини-карту, рис. 1–2.',
+ q11:'Памятка → «Дополнительная медицинская помощь»: список травм и средства.',
+ q12:'Памятка → «Дополнительная медицинская помощь»: раздел про бинты.',
+ q13:'Памятка → «Зоны…»: что нужно сделать в первую очередь; и «Меры по возвращению…», п. 3.',
+ q14:'Памятка → «Меры по возвращению…», п. 2, и «Дополнительная медицинская помощь».',
+ q15:'Памятка → «Меры по возвращению военнослужащего в боевое состояние»: порядок пунктов.'
+};
+var _p=[9, 10, 11, 8, 10, 11, 9, 11, 11, 9, 10, 12, 9, 10, 11];
 var QUESTIONS=QUESTIONS_BANK.slice(); // порядок отображения (перемешивается)
 
 function shuffleQuestions(){
@@ -626,9 +700,6 @@ function shuffleQuestions(){
         question:q.text
       });
     });
-    // для архива/Discord удобнее стабильный порядок по origN
-    details.sort(function(a,b){return a.origN-b.origN});
-    details.forEach(function(d){d.n=d.origN});
     return {score:score,total:15,details:details};
   }
 
@@ -665,6 +736,21 @@ function shuffleQuestions(){
     });
   }
 
+  function closeHints(){document.querySelectorAll('.q-hint.show').forEach(function(x){x.classList.remove('show')})}
+  document.addEventListener('click',closeHints);
+  function addHint(mk,id){
+    var t=HINTS[id]; if(!t)return;
+    var s=document.createElement('span');
+    s.className='q-hint'; s.tabIndex=0; s.setAttribute('role','button');
+    s.setAttribute('data-tip','Подсказка: '+t);
+    s.setAttribute('aria-label','Подсказка: '+t);
+    s.textContent='?';
+    s.addEventListener('click',function(e){
+      e.stopPropagation();
+      var on=s.classList.contains('show'); closeHints(); if(!on)s.classList.add('show');
+    });
+    mk.appendChild(s);
+  }
   function applyMarks(g){
     g.details.forEach(function(d){
       var card=$('card-'+d.id), mk=$('mk-'+d.id);
@@ -672,6 +758,7 @@ function shuffleQuestions(){
       if(d.missing){card.classList.add('mark-bad');mk.className='mark show bad';mk.textContent='✗ Нет ответа'}
       else if(d.ok){card.classList.add('mark-ok');mk.className='mark show ok';mk.textContent='✓ Верно'}
       else{card.classList.add('mark-bad');mk.className='mark show bad';mk.textContent='✗ Ошибка · ваш ответ: «'+d.pickText+'»'}
+      if(!d.ok)addHint(mk,d.id);
       card.querySelectorAll('input').forEach(function(i){i.disabled=true});
     });
   }
@@ -746,7 +833,56 @@ function shuffleQuestions(){
   $('dlgOk').onclick=function(){$('dlg').classList.remove('show')};
   $('dlg').onclick=function(e){if(e.target===$('dlg'))$('dlg').classList.remove('show')};
 
-  function buildReportPayload(g, p){
+  /* ---- Поздравление + конфетти ---- */
+  var cf={raf:0,ps:[],timers:[]};
+  function stopConfetti(){
+    cancelAnimationFrame(cf.raf);cf.timers.forEach(clearTimeout);cf.timers=[];cf.ps=[];
+    var c=$('confetti');c.getContext('2d').clearRect(0,0,c.width,c.height);c.style.display='none';
+  }
+  function fireConfetti(){
+    if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    stopConfetti();
+    var c=$('confetti'),ctx=c.getContext('2d');
+    c.width=innerWidth;c.height=innerHeight;c.style.display='block';
+    var colors=['#facc15','#ef4444','#22c55e'], pending=3;
+    function burst(side){
+      var x=side<0?0:c.width, y=c.height*0.55;
+      for(var i=0;i<80;i++){
+        var ang=-(15+Math.random()*60)*Math.PI/180, sp=9+Math.random()*10;
+        cf.ps.push({x:x,y:y,vx:(side<0?1:-1)*Math.cos(ang)*sp,vy:Math.sin(ang)*sp,
+          w:6+Math.random()*5,h:4+Math.random()*4,rot:Math.random()*6,vr:(Math.random()-.5)*.35,
+          color:colors[i%3],life:150+Math.random()*60,max:0});
+        cf.ps[cf.ps.length-1].max=cf.ps[cf.ps.length-1].life;
+      }
+    }
+    [0,350,800].forEach(function(t){
+      cf.timers.push(setTimeout(function(){burst(-1);burst(1);pending--},t));
+    });
+    function frame(){
+      ctx.clearRect(0,0,c.width,c.height);
+      cf.ps=cf.ps.filter(function(q){return q.life>0&&q.y<c.height+30});
+      cf.ps.forEach(function(q){
+        q.vx*=0.985;q.vy=q.vy*0.99+0.28;q.x+=q.vx;q.y+=q.vy;q.rot+=q.vr;q.life--;
+        ctx.save();ctx.globalAlpha=Math.min(1,q.life/40);
+        ctx.translate(q.x,q.y);ctx.rotate(q.rot);ctx.scale(1,Math.cos(q.rot*1.7));
+        ctx.fillStyle=q.color;ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h);ctx.restore();
+      });
+      if(cf.ps.length||pending>0){cf.raf=requestAnimationFrame(frame)}else{stopConfetti()}
+    }
+    cf.raf=requestAnimationFrame(frame);
+  }
+  function showCongrats(p,sent){
+    $('cgName').textContent='Молодец, '+(p.first||'боец')+'!';
+    $('cgSub').textContent=sent?'Отчёт ушёл на проверку.':'Результат сохранён в архив.';
+    $('congrats').classList.add('show');
+    fireConfetti();
+  }
+  function closeCongrats(){$('congrats').classList.remove('show');stopConfetti()}
+  $('cgOk').onclick=closeCongrats;
+  $('congrats').onclick=function(e){if(e.target===$('congrats'))closeCongrats()};
+
+  function buildReportPayload(g0, p){
+    var g={score:g0.score,total:g0.total,details:g0.details.map(function(d){var c={};for(var k in d)c[k]=d[k];c.n=d.origN;return c}).sort(function(a,b){return a.n-b.n})};
     var lines = [];
     lines.push('**Медицинский экзамен**');
     lines.push('Имя: '+(p.first||'')+' '+(p.last||''));
@@ -805,7 +941,7 @@ function shuffleQuestions(){
       }catch(e2){showDlg('Нет связи','Worker недоступен. Попробуйте позже.');return}
     }
     archiveCurrent({submitted:true});
-    showDlg('Отправлено','Отчёт сохранён'+(CONFIG.USE_WEBHOOK||CONFIG.USE_WORKER?' и ушёл на проверку.':' в архив. Связь с проверкой рапортов подключим, когда дадите URL.'));
+    showCongrats(p, !!(CONFIG.USE_WEBHOOK||CONFIG.USE_WORKER));
   }
 
   function doNew(){
@@ -954,6 +1090,21 @@ function shuffleQuestions(){
     stage.innerHTML='';
     box.classList.remove('open');
   });
+})();
+</script>
+<script>
+(function(){
+  var box=document.getElementById('goDoor'), url='';
+  function hide(){box.classList.remove('show')}
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('#linkDoor,#gateBack');
+    if(!a)return;
+    e.preventDefault(); url=a.href; box.classList.add('show');
+  });
+  document.getElementById('goDoorNo').onclick=hide;
+  document.getElementById('goDoorYes').onclick=function(){hide();if(url)location.href=url};
+  box.addEventListener('click',function(e){if(e.target===box)hide()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')hide()});
 })();
 </script>
 </body>
