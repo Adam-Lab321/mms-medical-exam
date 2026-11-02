@@ -369,6 +369,9 @@ body.memo-open .edge-crest{
 .cguard b{display:block;font-size:.92rem;color:var(--gold-l);margin-bottom:2px}
 .cguard span{display:block;font-size:.78rem;color:var(--muted);line-height:1.35}
 @media print{.app,.gate,.memo-win,.edge-crest,#fx{display:none!important}body::before{content:"Печать недоступна";color:#000;font-size:20px}}
+.alt-link{display:inline-block;margin-left:10px;font-size:.76rem;color:var(--muted);text-decoration:none;
+  border-bottom:1px dotted rgba(149,140,120,.6);transition:.15s}
+.alt-link:hover{color:var(--gold-l);border-bottom-color:var(--gold)}
 </style>
 </head>
 <body>
@@ -466,6 +469,7 @@ body.memo-open .edge-crest{
   <div class="agit-player" id="agitPlayer">
     <div class="agit-stage" id="agitStage"></div>
     <button type="button" class="btn agit-close" id="agitClose">✕ Свернуть</button>
+    <a class="alt-link" href="https://www.youtube.com/watch?v=7N9yyX1_3mI" target="_blank" rel="noopener">Не воспроизводится? Открыть на YouTube ↗</a>
   </div>
 </section>
 <div class="memo-banner" id="memoBanner">
@@ -487,6 +491,7 @@ body.memo-open .edge-crest{
           </div>
         </div>
         
+      <div class="video-actions"><a class="alt-link" style="margin-left:0" href="https://www.youtube.com/watch?v=FLyT1oTmfJg" target="_blank" rel="noopener">Не воспроизводится? Открыть на YouTube ↗</a></div>
       </section>
       <div id="questions"></div>
     </div>
