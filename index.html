@@ -857,18 +857,7 @@ function shuffleQuestions(){
     });
   }
 
-  /* TEST-CHEAT:start — временная кнопка, удалить вместе с #btnCheat в HTML */
-  function fillCorrect(){
-    if(graded){toast('Уже проверено — нажмите «Новая попытка»');return}
-    var key=decodeKey();
-    QUESTIONS.forEach(function(q){
-      var oi=parseInt(String(q.id).replace(/^q/,''),10)-1;
-      answers[q.id]=Number(key[oi]);syncCard(q.id);
-    });
-    updateSide();toast('Тест: все 15 верных ответов выставлены');
-  }
-  if($('btnCheat'))$('btnCheat').onclick=fillCorrect;
-  /* TEST-CHEAT:end */
+
 
   function closeHints(){document.querySelectorAll('.q-hint.show').forEach(function(x){x.classList.remove('show')})}
   document.addEventListener('click',closeHints);
