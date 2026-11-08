@@ -556,7 +556,7 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
             <button type="button" class="play" id="btnPlay" aria-label="Смотреть">▶</button>
           </div>
         </div>
-        <div class="video-actions"><a class="alt-link" style="margin-left:0" href="https://www.youtube.com/watch?v=FLyT1oTmfJg" target="_blank" rel="noopener">Не воспроизводится? Открыть на YouTube ↗</a></div>
+        <div class="video-actions"><a class="alt-link" style="margin-left:0" href="https://www.youtube.com/watch?v=FLyT1oTmfJg" target="_blank" rel="noopener">Запасной вариант: открыть на YouTube ↗</a></div>
       </section>
       <div id="questions"></div>
     </div>
@@ -628,6 +628,8 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
 <script>
 var CONFIG={
   YT:'FLyT1oTmfJg',
+  /* локальное видео на сайте (положи файл videos/training.mp4 в репозиторий) */
+  VIDEO_MP4:'videos/training.mp4',
   HUB:'https://adam-lab321.github.io/Door-MMS/',
   MIN_FOR_RESULT:13,MIN_SCORE_SUBMIT:15,
   MEMO_EMBED:"https://docs.google.com/document/d/1BUke6TBdjaD-cc8cQJ1_rG_2GNzay5miHrpM8NcENhM/preview",
@@ -770,10 +772,39 @@ function shuffleQuestions(){
     if(videoLoaded)return;videoLoaded=true;
     var stage=$('videoStage'),cover=$('videoCover');
     if(cover)cover.style.display='none';
+
+    /* 1) Локальный файл на нашем сайте (если залит) — лучший вариант */
+    var localSrc = CONFIG.VIDEO_MP4 || '';
+    if(localSrc){
+      var v=document.createElement('video');
+      v.setAttribute('controls','');
+      v.setAttribute('playsinline','');
+      v.setAttribute('autoplay','');
+      v.preload='metadata';
+      v.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#000;object-fit:contain';
+      v.src=localSrc;
+      v.onerror=function(){
+        /* локальный не открылся — fallback на YouTube embed на странице */
+        v.remove();
+        mountYtEmbed(stage);
+      };
+      stage.appendChild(v);
+      var p=v.play(); if(p&&p.catch)p.catch(function(){});
+      return;
+    }
+    /* 2) YouTube прямо на странице (iframe), без перехода на youtube.com */
+    mountYtEmbed(stage);
+  }
+
+  function mountYtEmbed(stage){
+    var id=CONFIG.YT||'';
     var ifr=document.createElement('iframe');
+    ifr.title='Обучающее видео MMS';
     ifr.allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen';
-    ifr.allowFullscreen=true;ifr.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
-    ifr.src='https://www.youtube.com/embed/'+CONFIG.YT+'?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    ifr.allowFullscreen=true;
+    ifr.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
+    /* youtube-nocookie чаще проходит в ограниченных сетях */
+    ifr.src='https://www.youtube-nocookie.com/embed/'+id+'?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1';
     stage.appendChild(ifr);
   }
 
