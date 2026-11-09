@@ -403,6 +403,19 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
   opacity:0; pointer-events:none; transition:opacity .25s;
 }
 .slide-submit[data-done] .slide-submit__done{opacity:1}
+@keyframes ssNudge{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(7px)}
+  45%{transform:translateX(0)}
+  65%{transform:translateX(4px)}
+  80%{transform:translateX(0)}
+}
+.slide-submit:not([data-disabled]):not([data-done]):not([data-held]) .slide-submit__knob{
+  animation:ssNudge 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion:reduce){
+  .slide-submit:not([data-disabled]):not([data-done]):not([data-held]) .slide-submit__knob{animation:none}
+}
 #btnSubmit{display:none!important} /* replaced by slide */
 
 
@@ -620,7 +633,7 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
   <div><b>Копирование недоступно</b><span>Вопросы защищены. Экзамен выполняется самостоятельно.</span></div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="ver">mms-exam · v3.20</div>
+<div class="ver">mms-exam · v3.21</div>
 
 <script>
 var CONFIG={
@@ -842,7 +855,7 @@ function shuffleQuestions(){
   }
   function updateFeedUI(){
     var hint=$('qMoreHint'),all=$('qAll'),left=QUESTIONS.length-shownCount;
-    if(hint)hint.textContent=left>0?('Показано '+shownCount+' из '+QUESTIONS.length+' · листайте вниз ↓'):('Все '+QUESTIONS.length+' вопросов на странице');
+    if(hint)hint.textContent=left>0?('Показано '+shownCount+' из '+QUESTIONS.length+' · листайте вниз ↓'):'';
     if(all)all.style.display=(left>0&&!graded)?'':'none';
     if(left<=0&&feedIO){feedIO.disconnect();feedIO=null}
   }
