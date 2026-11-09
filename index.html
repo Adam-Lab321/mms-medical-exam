@@ -121,6 +121,9 @@ a{color:var(--gold)}
 .q-hint:hover,.q-hint:focus,.q-hint.show{opacity:1;background:rgba(248,113,113,.2)}
 .q-hint::after{content:attr(data-tip);position:absolute;left:0;bottom:calc(100% + 6px);width:max-content;max-width:min(300px,100%);padding:7px 10px;border-radius:8px;background:#1a1610;border:1px solid var(--gold);color:var(--text);font-size:.76rem;font-weight:400;line-height:1.35;text-align:left;white-space:normal;opacity:0;transform:translateY(4px);pointer-events:none;transition:.15s;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .q-hint:hover::after,.q-hint:focus::after,.q-hint.show::after{opacity:1;transform:translateY(0)}
+.gw{display:inline-block;white-space:nowrap}
+.gc{font-weight:inherit;font-style:normal}
+.gc::before{content:attr(data-c)}
 #questions,#questions *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .q-ai{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
 /* окна */
@@ -661,7 +664,7 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
   <div><b>Копирование недоступно</b><span>Вопросы защищены. Экзамен выполняется самостоятельно.</span></div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="ver">mms-exam · v3.21</div>
+<div class="ver">mms-exam · v3.22</div>
 
 <script>
 var CONFIG={
@@ -708,6 +711,13 @@ function shuffleQuestions(){
   var answers={}, graded=false, lastGrade=null, videoLoaded=false;
   function $(id){return document.getElementById(id)}
   function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2600)}
+  /* Защита от поиска (Ctrl+F): каждый символ рисуется через CSS ::before, в тексте DOM его нет */
+  function ghost(s){
+    return String(s==null?'':s).split(/(\s+)/).map(function(w){
+      if(!w)return '';if(/^\s+$/.test(w))return ' ';
+      return '<span class="gw">'+Array.from(w).map(function(c){return '<b class="gc" data-c="'+esc(c)+'"></b>'}).join('')+'</span>';
+    }).join('');
+  }
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   function hub(){try{var h=new URLSearchParams(location.search).get('hub');if(h)return h}catch(e){}return CONFIG.HUB}
   function loadP(){try{var o=JSON.parse(localStorage.getItem(SP)||'null');if(o&&o.first&&o.sid)return o}catch(e){}return null}
@@ -873,11 +883,11 @@ function shuffleQuestions(){
     var opts=q.options.map(function(opt,oi){
       var on=picked===oi;
       return '<label class="opt'+(on?' picked':'')+'" data-q="'+q.id+'" data-oi="'+oi+'"><input type="radio" name="'+q.id+'" value="'+oi+'"'+(on?' checked':'')+(graded?' disabled':'')+' />'+
-        '<svg class="fx-chk" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M5.6 10.4l3 3 5.8-6.2" pathLength="1"/></svg><span>'+esc(opt)+'</span></label>';
+        '<svg class="fx-chk" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M5.6 10.4l3 3 5.8-6.2" pathLength="1"/></svg><span>'+ghost(opt)+'</span></label>';
     }).join('');
     var enter=(delay==null)?'':' q-enter" style="animation-delay:'+delay+'ms';
     return '<article class="q-card'+(picked!==null?' filled':'')+enter+'" id="card-'+q.id+'" data-idx="'+i+'">'+AI_HIDDEN+
-      '<div class="q-num">Вопрос '+(i+1)+' / 15</div><div class="q-text">'+esc(q.text)+'</div><div class="opts">'+opts+'</div><div class="mark" id="mk-'+q.id+'"></div></article>';
+      '<div class="q-num">Вопрос '+(i+1)+' / 15</div><div class="q-text">'+ghost(q.text)+'</div><div class="opts">'+opts+'</div><div class="mark" id="mk-'+q.id+'"></div></article>';
   }
   function syncCard(id){
     var card=$('card-'+id); if(!card)return;
@@ -1090,7 +1100,7 @@ function shuffleQuestions(){
   }
   function showCongrats(p,sent){
     $('cgName').textContent='Молодец, '+(p.first||'боец')+'!';
-    $('cgSub').textContent=sent?'Отчёт ушёл на проверку.':'Результат сохранён в архив.';
+    $('cgSub').textContent=sent?'Сделайте скриншот и отправьте в отчёт на повышение.':'Результат сохранён в архив.';
     $('congrats').classList.add('show');fireConfetti(true);
   }
   function closeCongrats(){$('congrats').classList.remove('show');stopConfetti()}
@@ -1263,6 +1273,7 @@ function shuffleQuestions(){
     if(inField(document.activeElement))return;e.preventDefault();try{e.clipboardData.setData('text/plain','')}catch(x){}warn();
   })});
   document.addEventListener('keydown',function(e){
+    if(((e.ctrlKey||e.metaKey)&&(e.code==='KeyF'||e.code==='KeyG'||e.code==='KeyS'||e.code==='KeyP'))||e.key==='F3'){if(!inField(document.activeElement)||e.code==='KeyF'||e.key==='F3'){e.preventDefault();e.stopPropagation();warn();return}}
     if((e.ctrlKey||e.metaKey)&&(e.code==='KeyC'||e.code==='KeyX'||e.code==='KeyA')&&!inField(document.activeElement)){e.preventDefault();warn()}
   });
   document.addEventListener('contextmenu',function(e){if(inQ(e.target)){e.preventDefault();warn()}});
