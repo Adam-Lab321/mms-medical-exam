@@ -476,6 +476,108 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
 .q-card,.q-card *{user-select:none;-webkit-user-select:none;-moz-user-select:none}
 .q-text,.opts span{-webkit-touch-callout:none}
 .af{font-size:0;line-height:0;width:0;height:0;overflow:hidden;display:inline-block}
+
+/* Screenshot guide frame ~6-7cm outside card */
+.cg-shot-frame{
+  position:absolute;pointer-events:none;z-index:1;
+  /* ~60-70px ≈ 1.5-2cm on screen; user asked 6-7cm → use larger gap */
+  inset: calc(50% - min(42vh, 280px) - 70px) calc(50% - min(46vw, 220px) - 70px);
+  border-radius:22px;
+  border:2px dashed transparent;
+  background:
+    linear-gradient(#080706,#080706) padding-box,
+    linear-gradient(90deg,transparent 0 40%,var(--gold) 40% 60%,transparent 60%) border-box;
+  background-size:100% 100%, 28px 2px, 2px 28px;
+  border:2px solid transparent;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+}
+#congrats{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:16px}
+#congrats.show{display:flex}
+#congrats .cg-box{position:relative;z-index:2}
+.cg-box{
+  position:relative;width:min(400px,92vw);padding:28px 22px 18px;text-align:center;
+  background:linear-gradient(165deg,#16130f,#0c0a08);border:1px solid var(--gold);
+  border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.65)
+}
+.cg-x{
+  position:absolute;top:10px;right:12px;width:36px;height:36px;border-radius:10px;
+  border:1px solid var(--border);background:#14110e;color:var(--gold);font-size:1.1rem;
+  cursor:pointer;line-height:1;display:grid;place-items:center
+}
+.cg-x:hover{border-color:var(--gold);background:rgba(212,175,55,.12)}
+.cg-hint{margin-top:14px;font-size:.72rem;color:var(--muted);line-height:1.35;letter-spacing:.02em}
+.cg-shot-ring{
+  position:absolute;inset:-68px;border-radius:24px;pointer-events:none;z-index:0;
+  background:transparent;
+  border:2px dashed rgba(212,175,55,.55);
+  animation:cg-dash 12s linear infinite;
+  box-shadow:0 0 0 1px rgba(212,175,55,.12);
+}
+@keyframes cg-dash{
+  to{ stroke-dashoffset:0 }
+}
+.cg-shot-ring{
+  /* animated dash along rectangle via border-image trick */
+  border:2.5px dashed var(--gold);
+  animation:cg-march 1.2s linear infinite;
+  opacity:.85;
+}
+@keyframes cg-march{
+  0%{border-color:rgba(212,175,55,.35)}
+  50%{border-color:rgba(232,200,74,.95)}
+  100%{border-color:rgba(212,175,55,.35)}
+  from{background-position:0 0}
+}
+/* better dash animation using outline offset pulse + rotating gradient border */
+.cg-shot-ring::before{
+  content:"";position:absolute;inset:-3px;border-radius:26px;padding:2.5px;
+  background:conic-gradient(from var(--fa,0deg),transparent 0 70%,var(--gold) 78% 88%,transparent 95% 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:cg-spin 4s linear infinite;
+}
+@keyframes cg-spin{to{--fa:360deg}}
+
+/* Font scale */
+html[data-fs="sm"]{font-size:13px}
+html[data-fs="md"]{font-size:15px}
+html[data-fs="lg"]{font-size:17.5px}
+html[data-fs="xl"]{font-size:20px}
+.ui-tools{
+  display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end
+}
+.ui-tools .seg{
+  display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;background:#0e0c0a
+}
+.ui-tools .seg button{
+  border:0;background:transparent;color:var(--muted);padding:6px 9px;font:inherit;font-size:.78rem;
+  cursor:pointer;border-right:1px solid var(--border)
+}
+.ui-tools .seg button:last-child{border-right:0}
+.ui-tools .seg button.on{background:rgba(212,175,55,.18);color:var(--gold);font-weight:600}
+.lang-menu{
+  position:relative
+}
+.lang-drop{
+  display:none;position:absolute;right:0;top:calc(100% + 4px);z-index:30;
+  min-width:150px;background:#12100e;border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 12px 32px rgba(0,0,0,.5);padding:4px
+}
+.lang-drop.open{display:block}
+.lang-drop button{
+  display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--text);
+  padding:8px 10px;border-radius:7px;font:inherit;font-size:.85rem;cursor:pointer
+}
+.lang-drop button:hover,.lang-drop button.on{background:rgba(212,175,55,.12);color:var(--gold)}
+#dbgFillAll{
+  border:1px dashed #f87171;color:#f87171;font-size:.75rem;padding:6px 8px
+}
+
 </style>
 </head>
 <body>
@@ -551,6 +653,27 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
     <header class="topbar">
       <div class="brand"><div><h1>Тест по военной медицине</h1></div></div>
       <div class="top-actions">
+      <div class="ui-tools">
+        <div class="seg" id="fsSeg" title="Размер текста">
+          <button type="button" data-fs="sm">A−</button>
+          <button type="button" data-fs="md" class="on">A</button>
+          <button type="button" data-fs="lg">A+</button>
+          <button type="button" data-fs="xl">A++</button>
+        </div>
+        <div class="lang-menu">
+          <button type="button" class="btn btn-ghost" id="btnLang" style="padding:6px 10px;font-size:.8rem">RU ▾</button>
+          <div class="lang-drop" id="langDrop">
+            <button type="button" data-lang="ru" class="on">Русский</button>
+            <button type="button" data-lang="en">English</button>
+            <button type="button" data-lang="kk">Қазақша</button>
+            <button type="button" data-lang="uk">Українська</button>
+          </div>
+        </div>
+        <!-- ===== MMS_DEBUG_FILL_START: удалить весь блок кнопки и скрипта с маркерами ===== -->
+        <button type="button" class="btn" id="dbgFillAll" title="Только для тестов — удалить перед боем">⚡ 15/15</button>
+        <!-- ===== MMS_DEBUG_FILL_END ===== -->
+      </div>
+
         <span class="chip" id="userChip">—</span>
         <button type="button" class="btn" id="btnArch">Архив</button>
         <a class="btn btn-ghost" id="linkDoor" href="https://adam-lab321.github.io/Door-MMS/">Дверь</a>
@@ -629,12 +752,14 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
 </div>
 <div class="cg-overlay" id="congrats" role="dialog" aria-modal="true" aria-labelledby="cgTitle">
   <div class="cg-box">
+    <div class="cg-shot-ring" aria-hidden="true"></div>
+    <button type="button" class="cg-x" id="cgOk" aria-label="Close">✕</button>
     <div class="cg-medal">✓</div>
     <h3 id="cgTitle">Поздравляем!</h3>
     <div class="cg-name" id="cgName"></div>
-    <div class="cg-lead">Поздравляем, вы сдали мед. экзамен!</div>
+    <div class="cg-lead" data-i18n-keep="1">Поздравляем, вы сдали мед. экзамен!</div>
     <div class="cg-sub" id="cgSub"></div>
-    <button type="button" class="btn btn-gold" id="cgOk" style="width:auto;min-width:140px">Закрыть</button>
+    <div class="cg-hint" id="cgHint">Win + Shift + S — выделите область по пунктирной рамке и сохраните скриншот в отчёт на повышение</div>
   </div>
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
@@ -668,7 +793,7 @@ var CONFIG={
   WORKER_URL:'https://mms-report-proxy.asakulin874.workers.dev'
 };
 var LOW=matchMedia('(prefers-reduced-motion: reduce)').matches||matchMedia('(max-width:700px)').matches;
-var QUESTIONS_BANK=[{"id":"q1","text":"Вы видите раненого сослуживца. Со стороны противника идут периодические перестрелки, но огонь можно предвидеть, рядом есть укрытия и коридоры для перемещения. К какой зоне относится местность?","options":["Красная зона — эвакуация невозможна, ждать подавления огня","Жёлтая зона — эвакуация возможна под прикрытием сил поддержки","Зелёная зона — можно спокойно организовывать ПМП на месте","Цвет зоны не важен, главное — скорость эвакуации"]},{"id":"q2","text":"Боец без сознания, у вас есть только эпинефрин, дефибриллятора нет. Какова примерная вероятность и скорость реанимации?","options":["100% за 4 секунды","50% за 10 секунд","75% за 4 секунды","Реанимация невозможна без дефибриллятора"]},{"id":"q3","text":"У вас есть и эпинефрин, и дефибриллятор, но нет адреналина. Стоит ли использовать дефибриллятор?","options":["Нет, дефибриллятор бесполезен без адреномиметика вообще","Да — сначала эпинефрин, затем дефибриллятор повышает шанс успеха до 100%","Да, но только дефибриллятор, без препарата","Дефибриллятор нужно использовать первым, а препарат потом"]},{"id":"q4","text":"На относительно безопасной территории нет вражеского огня, есть транспорт для эвакуации в госпиталь. Какая это зона и что в ней можно делать?","options":["Красная зона — нужно немедленно покинуть территорию","Жёлтая зона — эвакуация только под прикрытием","Зелёная зона — можно спокойно организовать ПМП и эвакуацию","Такая зона не описана в материалах"]},{"id":"q5","text":"У бойца рвота раз в час, потеря 10 HP каждые 30 минут и удвоенный расход еды/воды. Что это за состояние и чем лечить?","options":["Простуда — Азитромицин","Отравление — Активированный уголь","Диарея — Активированный уголь","Сотрясение мозга — Кодеиновые таблетки"]},{"id":"q6","text":"У сослуживца снижено HP, но он в сознании и кровотечения нет. Вы хотите ему помочь. Какое средство применяется только для помощи другому бойцу и не может быть использовано на себе?","options":["Кодеиновые таблетки","Бинты","Оба средства подходят только для помощи другому бойцу","Ни одно из средств нельзя применять на сослуживцах"]},{"id":"q7","text":"Боец без сознания лежит в центре открытого поля. На мини-карте над ним красный череп. Вы не видите противника, но не уверены на 100%, что зона безопасна. Каковы первые шаги?","options":["Сразу вводить эпинефрин на месте, где он упал","Оценить зону, убедиться в безопасности, перенести в укрытие и только потом начинать реанимацию","Оставить его и вызвать врача по рации, самому не подходить","Сразу применить дефибриллятор, не тратя время на переноску"]},{"id":"q8","text":"На поле боя идёт плотный огонь с применением тяжёлого вооружения, эвакуационная техника недоступна. К какой зоне это относится?","options":["Красная зона","Жёлтая зона","Зелёная зона","Нейтральная зона"]},{"id":"q9","text":"Пострадавший в сознании, вы собираетесь ввести эпинефрин и начать СЛР (Сердечно-легочная реанимация). Что нужно сделать перед началом этих действий?","options":["Ничего, сразу приступать к инъекции","Сообщить пострадавшему о своих действиях перед началом инъекции и СЛР","Дождаться, пока он потеряет сознание сам","Спросить письменное разрешение на дефибриллятор"]},{"id":"q10","text":"Вы обнаружили сослуживца, потерявшего сознание, издалека. Как мини-карта подскажет вам, что человек без сознания?","options":["Он будет обозначен зелёным цветом и иконкой сердца","Он будет обозначен серым цветом, а над головой — красный череп","Он будет мигать жёлтым без дополнительных иконок","Мини-карта не показывает состояние здоровья бойцов"]},{"id":"q11","text":"У бойца растяжение и лёгкая контузия после близкого разрыва, сознание сохранено, кровотечения нет, но боеспособность снижена. К какой категории отнесено это состояние и чем в первую очередь помочь?","options":["Критическая травма — немедленно эпинефрин и дефибриллятор","Дополнительная травма (не смертельная) — можно применить бинты","Это заболевание, а не травма — нужен Азитромицин","Это состояние не описано в материалах, помощь не требуется"]},{"id":"q12","text":"Как часто можно повторно использовать бинт и сколько HP он восстанавливает за один раз?","options":["25 HP, каждые 3–4 секунды","100 HP, мгновенно, без задержки","10 HP, раз в минуту","50 HP, раз в 10 секунд"]},{"id":"q13","text":"Вы обнаружили, что боец потерял сознание из-за атаки одиночного нападавшего, который всё ещё находится рядом. Каковы ваши первые действия?","options":["Сразу подбежать и начать реанимацию, не обращая внимания на нападавшего","Сначала удостовериться в отсутствии опасности со стороны нападающего, затем в безопасной обстановке применить дефибриллятор или эпинефрин.","Дождаться, пока нападавший уйдёт сам, ничего не предпринимая","Вызвать эвакуацию и больше ничего не делать"]},{"id":"q14","text":"Во время боя у вас осталось мало HP, а бронежилет полностью исчерпан. Каковы правильные действия?","options":["Продолжать бой без изменений — HP и броня не связаны","Найти укрытие, использовать аптечку и надеть новый бронежилет","Немедленно ввести эпинефрин, даже если сознание не потеряно","Снять оставшуюся экипировку для скорости передвижения"]},{"id":"q15","text":"Расставьте по порядку действия при обнаружении бойца без сознания в зоне, где не исключена опасность: 1) реанимация, 2) взять на руки, 3) убедиться в безопасности, 4) перенести в укрытие.","options":["1 → 2 → 3 → 4","2 → 4 → 3 → 1","3 → 1 → 2 → 4","4 → 2 → 1 → 3"]}];
+var QUESTIONS_BANK=[{"id":"q1","text":"Вы видите раненого сослуживца. Со стороны противника идут периодические перестрелки, но огонь можно предвидеть, рядом есть укрытия и коридоры для перемещения. К какой зоне относится местность?","options":["Красная зона — эвакуация невозможна, ждать подавления огня","Жёлтая зона — эвакуация возможна под прикрытием сил поддержки","Зелёная зона — можно спокойно организовывать ПМП на месте","Цвет зоны не важен, главное — скорость эвакуации"]},{"id":"q2","text":"Боец без сознания, у вас есть только эпинефрин, дефибриллятора нет. Какова примерная вероятность и скорость реанимации?","options":["100% за 4 секунды","50% за 10 секунд","75% за 4 секунды","Реанимация невозможна без дефибриллятора"]},{"id":"q3","text":"У вас есть и эпинефрин, и дефибриллятор, но нет адреналина. Стоит ли использовать дефибриллятор?","options":["Нет, дефибриллятор бесполезен без адреномиметика вообще","Да — сначала эпинефрин, затем дефибриллятор повышает шанс успеха до 100%","Да, но только дефибриллятор, без препарата","Дефибриллятор нужно использовать первым, а препарат потом"]},{"id":"q4","text":"На относительно безопасной территории нет вражеского огня, есть транспорт для эвакуации в госпиталь. Какая это зона и что в ней можно делать?","options":["Красная зона — нужно немедленно покинуть территорию","Жёлтая зона — эвакуация только под прикрытием","Зелёная зона — можно спокойно организовать ПМП и эвакуацию","Такая зона не описана в материалах"]},{"id":"q5","text":"У бойца рвота раз в час, потеря 10 HP каждые 30 минут и удвоенный расход еды/воды. Что это за состояние и чем лечить?","options":["Простуда — Азитромицин","Отравление — Активированный уголь","Диарея — Активированный уголь","Сотрясение мозга — Кодеиновые таблетки"]},{"id":"q6","text":"У сослуживца снижено HP, но он в сознании и кровотечения нет. Вы хотите ему помочь. Какое средство применяется только для помощи другому бойцу и не может быть использовано на себе?","options":["Кодеиновые таблетки","Бинты","Оба средства подходят только для помощи другому бойцу","Ни одно из средств нельзя применять на сослуживцах"]},{"id":"q7","text":"Боец без сознания лежит в центре открытого поля. На мини-карте над ним красный череп. Вы не видите противника, но не уверены на 100%, что зона безопасна. Каковы первые шаги?","options":["Сразу вводить эпинефрин на месте, где он упал","Оценить зону, убедиться в безопасности, перенести в укрытие и только потом начинать реанимацию","Оставить его и вызвать врача по рации, самому не подходить","Сразу применить дефибриллятор, не тратя время на переноску"]},{"id":"q8","text":"На поле боя идёт плотный огонь с применением тяжёлого вооружения, эвакуационная техника недоступна. К какой зоне это относится?","options":["Красная зона","Жёлтая зона","Зелёная зона","Нейтральная зона"]},{"id":"q9","text":"Пострадавший в сознании, вы готовитесь ввести эпинефрин. Сознание сохранено, дыхание есть. Что нужно сделать перед инъекцией?","options":["Ничего, сразу делать инъекцию","Сообщить пострадавшему о своих действиях и получить согласие","Дождаться, пока он потеряет сознание, и только потом колоть","Сначала провести полный цикл СЛР, затем ввести препарат"]},{"id":"q10","text":"Вы обнаружили сослуживца, потерявшего сознание, издалека. Как мини-карта подскажет вам, что человек без сознания?","options":["Он будет обозначен зелёным цветом и иконкой сердца","Он будет обозначен серым цветом, а над головой — красный череп","Он будет мигать жёлтым без дополнительных иконок","Мини-карта не показывает состояние здоровья бойцов"]},{"id":"q11","text":"У бойца растяжение и лёгкая контузия после близкого разрыва, сознание сохранено, кровотечения нет, но боеспособность снижена. К какой категории отнесено это состояние и чем в первую очередь помочь?","options":["Критическая травма — немедленно эпинефрин и дефибриллятор","Дополнительная травма (не смертельная) — можно применить бинты","Это заболевание, а не травма — нужен Азитромицин","Это состояние не описано в материалах, помощь не требуется"]},{"id":"q12","text":"Как часто можно повторно использовать бинт и сколько HP он восстанавливает за один раз?","options":["25 HP, каждые 3–4 секунды","100 HP, мгновенно, без задержки","10 HP, раз в минуту","50 HP, раз в 10 секунд"]},{"id":"q13","text":"Вы обнаружили, что боец потерял сознание из-за атаки одиночного нападавшего, который всё ещё находится рядом. Каковы ваши первые действия?","options":["Сразу подбежать и начать реанимацию, не обращая внимания на нападавшего","Сначала удостовериться в отсутствии опасности со стороны нападающего, затем в безопасной обстановке применить дефибриллятор или эпинефрин.","Дождаться, пока нападавший уйдёт сам, ничего не предпринимая","Вызвать эвакуацию и больше ничего не делать"]},{"id":"q14","text":"Во время боя у вас осталось мало HP, а бронежилет полностью исчерпан. Каковы правильные действия?","options":["Продолжать бой без изменений — HP и броня не связаны","Найти укрытие, использовать аптечку и надеть новый бронежилет","Немедленно ввести эпинефрин, даже если сознание не потеряно","Снять оставшуюся экипировку для скорости передвижения"]},{"id":"q15","text":"Расставьте по порядку действия при обнаружении бойца без сознания в зоне, где не исключена опасность: 1) реанимация, 2) взять на руки, 3) убедиться в безопасности, 4) перенести в укрытие.","options":["1 → 2 → 3 → 4","2 → 4 → 3 → 1","3 → 1 → 2 → 4","4 → 2 → 1 → 3"]}];
 var HINTS={
  q1:'Памятка → «Зоны для оказания ПМП»: сравни описания всех трёх зон.',
  q2:'Памятка → «Алгоритм действий», п. 2 «Введение адреномиметика».',
@@ -727,6 +852,214 @@ function shuffleQuestions(){
   function saveA(list){localStorage.setItem(SA,JSON.stringify(list.slice(0,30)))}
   function decodeKey(){return _p.map(function(v,i){return ((v-3-(i%3))^7)})}
   function answeredCount(){return Object.keys(answers).length}
+
+/* ===== i18n + font size + debug fill ===== */
+var LANG = localStorage.getItem('mmsExamLang') || 'ru';
+var I18N = {
+  ru: {
+    cg_sub_sent: 'Отчёт ушёл на проверку = сделайте скриншот и отправьте в отчёт на повышение.',
+    cg_sub_local: 'Результат сохранён в архив.',
+    cg_hint: 'Win + Shift + S — выделите область по пунктирной рамке и сохраните скриншот в отчёт на повышение',
+    enter: 'Войти к экзамену',
+    memo: 'Памятка',
+    submit: 'Отправить',
+    result: 'Результат',
+    q_of: 'Вопрос {n} / 15',
+    progress: 'Прогресс',
+    lang_btn: 'RU ▾'
+  },
+  en: {
+    cg_sub_sent: 'Make a screenshot and upload it to your promotion report.',
+    cg_sub_local: 'Result saved to archive.',
+    cg_hint: 'Win + Shift + S — select the dashed frame area and save the screenshot to your promotion report',
+    enter: 'Enter the exam',
+    memo: 'Memo',
+    submit: 'Submit',
+    result: 'Result',
+    q_of: 'Question {n} / 15',
+    progress: 'Progress',
+    lang_btn: 'EN ▾'
+  },
+  kk: {
+    cg_sub_sent: 'Скриншот жасап, жоғарылату туралы есепке жүктеңіз.',
+    cg_sub_local: 'Нәтиже мұрағатқа сақталды.',
+    cg_hint: 'Win + Shift + S — үзік сызықты жақтауды белгілеп, скриншотты жоғарылату есебіне сақтаңыз',
+    enter: 'Емтиханға кіру',
+    memo: 'Жаднама',
+    submit: 'Жіберу',
+    result: 'Нәтиже',
+    q_of: 'Сұрақ {n} / 15',
+    progress: 'Барысы',
+    lang_btn: 'KK ▾'
+  },
+  uk: {
+    cg_sub_sent: 'Зробіть скріншот і завантажте його у звіт на підвищення.',
+    cg_sub_local: 'Результат збережено в архів.',
+    cg_hint: 'Win + Shift + S — виділіть область за пунктиром і збережіть скріншот у звіт на підвищення',
+    enter: 'Увійти до іспиту',
+    memo: 'Пам\'ятка',
+    submit: 'Надіслати',
+    result: 'Результат',
+    q_of: 'Питання {n} / 15',
+    progress: 'Прогрес',
+    lang_btn: 'UK ▾'
+  }
+};
+function t(key){
+  var pack = I18N[LANG] || I18N.ru;
+  return pack[key] || I18N.ru[key] || key;
+}
+
+/* Переводы вопросов: смысл тот же */
+var Q_TR = {
+  en: {
+    q1: ["You see a wounded teammate. Enemy fire is intermittent and predictable; there are covers and movement corridors. Which zone is this?","Red — evacuation impossible, wait for suppression","Yellow — evacuation possible under support fire","Green — you can calmly organize first aid on site","Zone color does not matter, only evacuation speed"],
+    q2: ["A fighter is unconscious; you only have epinephrine, no defibrillator. Approximate chance and speed of resuscitation?","100% in 4 seconds","50% in 10 seconds","75% in 4 seconds","Impossible without a defibrillator"],
+    q3: ["You have epinephrine and a defibrillator, but no adrenaline. Should you use the defibrillator?","No, the defibrillator is useless without any adrenergic drug","Yes — epinephrine first, then defibrillator raises success chance to 100%","Yes, but defibrillator only, without the drug","Defibrillator first, then the drug"],
+    q4: ["On relatively safe ground with no enemy fire and transport available for evacuation to a hospital, which zone is this?","Red — leave immediately","Yellow — evacuation only under cover","Green — you can calmly organize first aid and evacuation","This zone is not described"],
+    q5: ["The fighter vomits once an hour, loses 10 HP every 30 minutes, and spends twice as much food/water. What is it and treatment?","Cold — Azithromycin","Poisoning — Activated charcoal","Diarrhea — Activated charcoal","Concussion — Codeine tablets"],
+    q6: ["A teammate has reduced HP, is conscious, no bleeding. You want to help. Which item is for helping a teammate?","Codeine tablets","Bandages","Both only for helping others","None may be used on teammates"],
+    q7: ["Unconscious fighter in an open field; red skull on the minimap. Enemy threat possible. Your actions?","Inject epinephrine where he fell","Assess the zone, ensure safety, move to cover, then start aid","Leave him and call a medic on radio","Use defibrillator immediately without moving him"],
+    q8: ["Heavy fire with heavy weapons, no evacuation vehicles nearby. Zone?","Red zone","Yellow zone","Green zone","Neutral zone"],
+    q9: ["The casualty is conscious; you are about to inject epinephrine. Breathing is present. What before the injection?","Nothing, inject immediately","Tell the casualty what you will do and get consent","Wait until he loses consciousness, then inject","Full CPR cycle first, then the drug"],
+    q10: ["How does an unconscious fighter appear on the minimap?","Blue icon without marks","Grey color with a red skull above the head","Yellow blinking without icons","Minimap does not show health"],
+    q11: ["Sprain and mild contusion after a nearby blast; conscious, no bleeding. What is it?","Critical — epinephrine and defibrillator immediately","Additional non-lethal injury — bandages can be used","Disease — Azithromycin","Not described, no help needed"],
+    q12: ["How often can a bandage be reused and how much HP does it restore?","25 HP every 3–4 seconds","100 HP instantly, no delay","10 HP once per minute","50 HP every 10 seconds"],
+    q13: ["Fighter lost consciousness after an attack; the attacker may still be nearby. Your order of actions?","Run and start resuscitation ignoring the attacker","First ensure the attacker is not a threat, then give aid in safety","Wait until the attacker leaves, do nothing","Call evacuation and do nothing else"],
+    q14: ["In combat your HP is low and body armor is depleted. Correct actions?","Keep fighting unchanged","Find cover, use a medkit, put on new body armor","Inject epinephrine even while conscious","Drop remaining gear for speed"],
+    q15: ["Order of actions when finding an unconscious fighter where danger is still possible: (1) aid (2) safety check (3) move to cover (4) call support. Correct order?","1 → 2 → 3 → 4","2 → 4 → 3 → 1","3 → 1 → 2 → 4","4 → 2 → 1 → 3"]
+  },
+  kk: {
+    q1: ["Жараланған әріптесті көресіз. Қарсы жақтан атыс үзік-үзік, болжауға болады, баспаналар бар. Бұл қандай аймақ?","Қызыл — эвакуация мүмкін емес","Сары — қолдау астында эвакуация мүмкін","Жасыл — орнында ПМП ұйымдастыруға болады","Түс маңызды емес, тек жылдамдық"],
+    q2: ["Жауынгер ессіз; тек эпинефрин бар, дефибриллятор жоқ. Реанимация ықтималдығы?","4 секундта 100%","10 секундта 50%","4 секундта 75%","Дефибрилляторсыз мүмкін емес"],
+    q3: ["Эпинефрин мен дефибриллятор бар, адреналин жоқ. Дефибрилляторды қолдану керек пе?","Жоқ, препаратсыз пайдасыз","Иә — алдымен эпинефрин, содан дефибриллятор, сәттілік 100%","Тек дефибриллятор","Алдымен дефибриллятор, кейін препарат"],
+    q4: ["Қауіпсіз жер, оқ жоқ, госпитальға транспорт бар. Аймақ?","Қызыл","Сары","Жасыл — ПМП мен эвакуация","Сипатталмаған"],
+    q5: ["Сағатына бір рет құсу, 30 мин сайын 10 HP жоғалту, тамақ/су екі есе. Не және ем?","Суық тию — Азитромицин","Улану — Белсендірілген көмір","Диарея — Белсендірілген көмір","Мі — Кодеин"],
+    q6: ["Әріптестің HP төмен, есі бар, қан жоқ. Көмекке не?","Кодеин таблеткалары","Бинттер","Тек басқаға","Ештеңе"],
+    q7: ["Ашық далада ессіз жауынгер, картада қызыл бас сүйек. Не істеу?","Сол жерде эпинефрин","Аймақты бағала, қауіпсіз жерге көшір, сосын көмек","Тастап радиодан шақыр","Дефибриллятор дереу"],
+    q8: ["Ауыр қарумен тығыз оқ, эвакуация жоқ. Аймақ?","Қызыл","Сары","Жасыл","Бейтарап"],
+    q9: ["Жаралы есінде, эпинефрин енгізбексіз. Тыныс бар. Инъекция алдында?","Ештеңе, бірден","Әрекетіңді айтып, келісім ал","Есінен танғанша күт","Алдымен толық СЛР"],
+    q10: ["Ессіз жауынгер мини-картада қалай?","Көк белгі","Сұр түс және қызыл бас сүйек","Сары жыпылық","Көрсетпейді"],
+    q11: ["Созылу және жеңіл контузия, есі бар, қан жоқ. Бұл не?","Критикалық — эпинефрин","Қосымша жарақат — бинт","Ауру — Азитромицин","Сипатталмаған"],
+    q12: ["Бинт қанша HP және қанша жиі?","25 HP, 3–4 сек","100 HP бірден","10 HP минутта","50 HP 10 сек"],
+    q13: ["Шабуылдан кейін ессіз, шабуылдаушы жақын болуы мүмкін. Реті?","Жүгіріп реанимация","Алдымен қауіп жоқ екенін тексер","Кеткенше күт","Тек эвакуация"],
+    q14: ["HP аз, бронь біткен. Не істеу?","Соғысты жалғастыр","Баспана, аптечка, жаңа бронь","Есінде эпинефрин","Жабдықты таста"],
+    q15: ["Ессіз жауынгер, қауіп болуы мүмкін: (1) көмек (2) қауіпсіздік (3) баспана (4) қолдау. Дұрыс рет?","1 → 2 → 3 → 4","2 → 4 → 3 → 1","3 → 1 → 2 → 4","4 → 2 → 1 → 3"]
+  },
+  uk: {
+    q1: ["Ви бачите пораненого побратима. Вогонь періодичний і передбачуваний, є укриття. Яка це зона?","Червона — евакуація неможлива","Жовта — евакуація під прикриттям","Зелена — можна спокійно організувати ПМД","Колір не важливий"],
+    q2: ["Боєць без свідомості; лише епінефрин, без дефібрилятора. Ймовірність реанімації?","100% за 4 с","50% за 10 с","75% за 4 с","Неможливо без дефібрилятора"],
+    q3: ["Є епінефрин і дефібрилятор, немає адреналіну. Чи використовувати дефібрилятор?","Ні, без препарату марно","Так — спочатку епінефрин, потім дефібрилятор до 100%","Лише дефібрилятор","Спочатку дефібрилятор"],
+    q4: ["Безпечна територія, немає вогню, є транспорт до шпиталю. Зона?","Червона","Жовта","Зелена — ПМД і евакуація","Не описана"],
+    q5: ["Блювання раз на годину, −10 HP / 30 хв, подвійні витрати їжі/води. Що це?","Застуда — Азитроміцин","Отруєння — Активоване вугілля","Діарея — Активоване вугілля","Струс — Кодеїн"],
+    q6: ["У побратима знижене HP, свідомий, без кровотечі. Чим допомогти іншому?","Кодеїнові таблетки","Бинти","Лише для інших","Нічим"],
+    q7: ["Без свідомості в полі, на карті червоний череп. Дії?","Епінефрин на місці","Оцінити зону, перенести в укриття, потім допомога","Залишити і викликати","Дефібрилятор одразу"],
+    q8: ["Щільний вогонь важким озброєнням, евакуації немає. Зона?","Червона","Жовта","Зелена","Нейтральна"],
+    q9: ["Постраждалий при свідомості, готуєте епінефрин. Дихання є. Перед ін’єкцією?","Нічого, одразу","Повідомити про дії і отримати згоду","Чекати втрати свідомості","Спочатку повний цикл СЛР"],
+    q10: ["Як виглядає без свідомості на міні-карті?","Синя іконка","Сірий колір і червоний череп","Жовте блимання","Не показує"],
+    q11: ["Розтягнення і легка контузія, свідомий, без кровотечі. Що це?","Критична — епінефрин","Додаткова травма — бинти","Хвороба — Азитроміцин","Не описано"],
+    q12: ["Бинт: скільки HP і як часто?","25 HP кожні 3–4 с","100 HP миттєво","10 HP раз на хвилину","50 HP / 10 с"],
+    q13: ["Без свідомості після атаки, нападник може бути поруч. Порядок?","Бігти і реанімувати","Спочатку переконатися у безпеці","Чекати","Лише евакуація"],
+    q14: ["Мало HP, броня вичерпана. Дії?","Продовжувати бій","Укриття, аптечка, нова броня","Епінефрин при свідомості","Кинути спорядження"],
+    q15: ["Порядок при виявленні без свідомості за можливої небезпеки: (1) допомога (2) безпека (3) укриття (4) підтримка?","1 → 2 → 3 → 4","2 → 4 → 3 → 1","3 → 1 → 2 → 4","4 → 2 → 1 → 3"]
+  }
+};
+
+function qPack(q){
+  if(LANG==='ru' || !Q_TR[LANG] || !Q_TR[LANG][q.id]) return {text:q.text, options:q.options};
+  var row = Q_TR[LANG][q.id];
+  return {text:row[0], options:row.slice(1)};
+}
+
+function applyLangUI(){
+  var b=$('btnLang'); if(b) b.textContent=t('lang_btn');
+  document.querySelectorAll('#langDrop button').forEach(function(btn){
+    btn.classList.toggle('on', btn.getAttribute('data-lang')===LANG);
+  });
+  var ge=$('gateEnter'); if(ge) ge.textContent=t('enter');
+  var bm=$('btnMemo'); if(bm) bm.textContent=t('memo');
+  var bs=$('btnSubmit'); if(bs) bs.textContent=t('submit');
+  var br=$('btnResult'); if(br) br.textContent=t('result');
+}
+
+function setLang(code){
+  LANG=code||'ru';
+  try{localStorage.setItem('mmsExamLang',LANG)}catch(e){}
+  applyLangUI();
+  // re-render questions with translation
+  if(typeof shownCount!=='undefined' && $('qFeed')){
+    $('qFeed').innerHTML='';
+    shownCount=0;
+    if(typeof appendCards==='function') appendCards(QUESTIONS.length, true);
+  }
+  if(typeof updateSide==='function') updateSide();
+}
+
+// patch cardHTML to use translations - via wrapper after definition
+function patchCardHTML(){
+  if(typeof cardHTML!=='function' || cardHTML._i18n) return;
+  var orig=cardHTML;
+  cardHTML=function(q,i,delay){
+    var tr=qPack(q);
+    var q2={id:q.id, text:tr.text, options:tr.options};
+    return orig(q2,i,delay).replace(/Вопрос (\d+) \/ 15/g, function(_,n){ return t('q_of').replace('{n}',n); });
+  };
+  cardHTML._i18n=true;
+}
+
+/* font size */
+function setFs(size){
+  var s=size||'md';
+  document.documentElement.setAttribute('data-fs',s);
+  try{localStorage.setItem('mmsExamFs',s)}catch(e){}
+  document.querySelectorAll('#fsSeg button').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-fs')===s);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  setFs(localStorage.getItem('mmsExamFs')||'md');
+  applyLangUI();
+  var fs=$('fsSeg');
+  if(fs) fs.addEventListener('click', function(e){
+    var b=e.target.closest('button[data-fs]'); if(!b) return;
+    setFs(b.getAttribute('data-fs'));
+  });
+  var bl=$('btnLang'), ld=$('langDrop');
+  if(bl&&ld){
+    bl.onclick=function(e){e.stopPropagation();ld.classList.toggle('open')};
+    ld.addEventListener('click', function(e){
+      var b=e.target.closest('button[data-lang]'); if(!b) return;
+      setLang(b.getAttribute('data-lang'));
+      ld.classList.remove('open');
+    });
+    document.addEventListener('click', function(){ld.classList.remove('open')});
+  }
+  try{ patchCardHTML(); }catch(e){}
+  if(LANG!=='ru') setLang(LANG);
+});
+
+/* ===== MMS_DEBUG_FILL_START =====
+   УДАЛИТЬ: кнопку #dbgFillAll в HTML и весь этот блок до MMS_DEBUG_FILL_END
+===== */
+function mmsDebugFillAllCorrect(){
+  if(typeof decodeKey!=='function'||!QUESTIONS) return;
+  var key=decodeKey();
+  QUESTIONS.forEach(function(q){
+    var origIdx=parseInt(String(q.id).replace(/^q/,''),10)-1;
+    answers[q.id]=key[origIdx];
+  });
+  if(typeof shownCount!=='undefined'){ shownCount=0; if($('qFeed'))$('qFeed').innerHTML=''; if(typeof appendCards==='function')appendCards(QUESTIONS.length,true); }
+  if(typeof updateSide==='function')updateSide();
+  if(typeof syncSubmit==='function')syncSubmit();
+  try{ toast('Тест: все 15 ответов выставлены'); }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var b=$('dbgFillAll');
+  if(b) b.onclick=function(){ mmsDebugFillAllCorrect(); };
+});
+/* ===== MMS_DEBUG_FILL_END ===== */
+
   function missing(){var m=[];QUESTIONS.forEach(function(q,i){if(!answers.hasOwnProperty(q.id))m.push(i+1)});return m}
 
   /* Памятка */
@@ -1065,41 +1398,45 @@ function cardHTML(q,i,delay){
     var colors=['#d4af37','#e8c84a','#fff3b0','#ffffff','#4ade80','#f87171'];
     var medal=document.querySelector('#congrats .cg-medal'),mr=medal?medal.getBoundingClientRect():null;
     var mx=mr?mr.left+mr.width/2:W/2,my=mr?mr.top+mr.height/2:H*0.4;
-    var waves=[0,320,720,1200],fired=0;
-    function P(x,y,vx,vy,g){return{x:x,y:y,vx:vx,vy:vy,g:g,w:6+Math.random()*5,h:4+Math.random()*4,rot:Math.random()*6,vr:(Math.random()-.5)*.35,color:colors[Math.random()*colors.length|0],life:200+Math.random()*100}}
+    var waves=[0,700,1500,2400],fired=0;
+    function P(x,y,vx,vy,g){return{x:x,y:y,vx:vx,vy:vy,g:g,w:6+Math.random()*5,h:4+Math.random()*4,rot:Math.random()*6,vr:(Math.random()-.5)*.35,color:colors[Math.random()*colors.length|0],life:320+Math.random()*160}}
     function cannon(side){
       for(var i=0;i<80;i++){
-        var a=(52+Math.random()*30)*Math.PI/180,sp=11+Math.random()*8;
-        cf.ps.push(P(side<0?-6:W+6,H+6,(side<0?1:-1)*Math.cos(a)*sp,-Math.sin(a)*sp,.22));
+        var a=(52+Math.random()*30)*Math.PI/180,sp=5.5+Math.random()*4;
+        cf.ps.push(P(side<0?-6:W+6,H+6,(side<0?1:-1)*Math.cos(a)*sp,-Math.sin(a)*sp,.09));
       }
     }
     function radial(){
       for(var i=0;i<70;i++){
-        var a=Math.random()*Math.PI*2,sp=3+Math.random()*7;
+        var a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3.5;
         cf.ps.push(P(mx,my,Math.cos(a)*sp,Math.sin(a)*sp-2,.18));
       }
     }
+    cf._t0=(typeof performance!=='undefined'?performance.now():Date.now());
     waves.forEach(function(t,k){cf.timers.push(setTimeout(function(){cannon(-1);cannon(1);if(k===0)radial();fired++},t))});
     function frame(){
       ctx.clearRect(0,0,W,H);
       cf.ps=cf.ps.filter(function(q){return q.life>0&&q.y<H+40});
       cf.ps.forEach(function(q){
-        q.vx*=0.985;q.vy=q.vy*0.99+q.g;q.x+=q.vx;q.y+=q.vy;q.rot+=q.vr;q.life--;
+        q.vx*=0.992;q.vy=q.vy*0.995+q.g;q.x+=q.vx;q.y+=q.vy;q.rot+=q.vr;q.life--;
         ctx.save();ctx.globalAlpha=Math.min(1,q.life/40);ctx.translate(q.x,q.y);ctx.rotate(q.rot);ctx.scale(1,Math.cos(q.rot*1.7));
         ctx.fillStyle=q.color;ctx.fillRect(-q.w/2,-q.h/2,q.w,q.h);ctx.restore();
       });
-      if(cf.ps.length||fired<waves.length)cf.raf=requestAnimationFrame(frame);else stopConfetti();
+      var elapsed=(typeof performance!=='undefined'?performance.now():Date.now())-(cf._t0||0);
+      if(!cf._t0)cf._t0=(typeof performance!=='undefined'?performance.now():Date.now());
+      if(elapsed<5200||cf.ps.length||fired<waves.length)cf.raf=requestAnimationFrame(frame);else{cf._t0=0;stopConfetti();}
     }
     cf.raf=requestAnimationFrame(frame);
   }
   function showCongrats(p,sent){
     $('cgName').textContent=((p.first||'')+' '+(p.last||'')).trim()||'Кадет';
-    $('cgSub').textContent=sent?'Отчёт ушёл на проверку = сделайте скриншот и отправьте в отчёт на повышение.':'Результат сохранён в архив.';
+    $('cgSub').textContent=sent?t('cg_sub_sent'):t('cg_sub_local');
+    var h=$('cgHint'); if(h){ h.textContent=t('cg_hint'); }
     $('congrats').classList.add('show');fireConfetti(true);
   }
   function closeCongrats(){$('congrats').classList.remove('show');stopConfetti()}
   $('cgOk').onclick=closeCongrats;
-  $('congrats').onclick=function(e){if(e.target===$('congrats'))closeCongrats()};
+  /* закрытие только крестиком */
 
   function buildReportPayload(g0,p){
     var g={score:g0.score,total:g0.total,details:g0.details.map(function(d){var c={};for(var k in d)c[k]=d[k];c.n=d.origN;return c}).sort(function(a,b){return a.n-b.n})};
