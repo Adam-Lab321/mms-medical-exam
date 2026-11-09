@@ -520,8 +520,8 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
   <div class="memo-titlebar" id="memoDrag">
     <span class="ttl">📖 Памятка по медицине</span>
     <button type="button" class="tb" id="memoMin" title="Свернуть">—</button>
-    <button type="button" class="tb" id="memoFs" title="На весь экран">⛶</button>
-    <button type="button" class="tb" id="memoClose" title="Закрыть">✕</button>
+    <button type="button" class="tb" id="memoFs" title="На весь экран" aria-label="На весь экран">⛶</button>
+    <button type="button" class="tb" id="memoClose" title="Закрыть" aria-label="Закрыть">✕</button>
   </div>
   <div class="memo-body"><iframe id="memoFrame" title="Памятка" src="about:blank"></iframe></div>
   <div class="memo-resize" id="memoResize"></div>
@@ -586,7 +586,7 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
       <div class="side-msg wait" id="sideMsg">С 13 ответов можно смотреть баллы.</div>
       <div class="side-actions">
         <button type="button" class="btn" id="btnResult" disabled>Посмотреть баллы</button>
-        <button type="button" class="btn btn-gold" id="btnSubmit" disabled style="display:none">Отправить тест</button>
+        <button type="button" class="btn btn-gold" id="btnSubmit" disabled>Отправить тест</button>
         <div class="slide-submit" id="slideSubmit" data-disabled aria-label="Сдвиньте, чтобы отправить тест">
           <div class="slide-submit__fill" id="ssFill"></div>
           <div class="slide-submit__label" id="ssLabel">Сдвиньте → отправить</div>
@@ -633,7 +633,7 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
   <div><b>Копирование недоступно</b><span>Вопросы защищены. Экзамен выполняется самостоятельно.</span></div>
 </div>
 <div class="toast" id="toast"></div>
-<div class="ver">mms-exam · v3.21</div>
+<div class="ver">mms-exam · v3.22</div>
 
 <script>
 var CONFIG={
@@ -677,7 +677,7 @@ function shuffleQuestions(){
 
 (function(){
   var SP='mmsExamProfile_v35', SA='mmsExamArchive_v35', TOUR='mmsExamTourSeen_v35';
-  var answers={}, graded=false, lastGrade=null, videoLoaded=false;
+  var answers={}, graded=false, lastGrade=null, videoLoaded=false, archivedAttempt=false;
   function $(id){return document.getElementById(id)}
   function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2600)}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -967,7 +967,7 @@ function shuffleQuestions(){
     var item={id:'a_'+Date.now(),at:new Date().toISOString(),score:g.score,total:15,academic:p.sid,
       details:g.details.map(function(d){return{n:d.n,ok:d.ok,missing:d.missing,question:d.question,pickText:d.pickText}})};
     if(extra)item.submitted=!!extra.submitted;
-    var list=loadA();list.unshift(item);saveA(list);renderArch();
+    var list=loadA();list.unshift(item);saveA(list);renderArch();archivedAttempt=true;
   }
   function fmtMsk(iso){
     var ms=Date.parse(iso);if(isNaN(ms))return '';
@@ -1065,7 +1065,7 @@ function shuffleQuestions(){
     if(CONFIG.USE_WORKER&&CONFIG.WORKER_URL){
       try{
         var res=await fetch(CONFIG.WORKER_URL+'/exam/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        if(!res.ok){var em='Сервер отклонил отчёт.';try{var ej=await res.json();if(ej&&ej.error)em=ej.error}catch(_){}showDlg('Ошибка',em);return}
+        if(!res.ok){var em='Сервер отклонил отчёт.';try{var ej=await res.json();if(ej&&ej.error)em=ej.error}catch(ignore){}showDlg('Ошибка',em);return}
       }catch(e2){showDlg('Нет связи','Worker недоступен. Попробуйте позже.');return}
     }
     archiveCurrent({submitted:true});
@@ -1073,10 +1073,11 @@ function shuffleQuestions(){
   }
 
   function doNew(){
-    if(answeredCount()>0||graded){
-      if(graded||answeredCount()>=CONFIG.MIN_FOR_RESULT){if(!graded)lastGrade=grade();archiveCurrent({})}
+    if(!archivedAttempt&&(graded||answeredCount()>=CONFIG.MIN_FOR_RESULT)){
+      if(!graded)lastGrade=grade();
+      archiveCurrent({});
     }
-    answers={};graded=false;lastGrade=null;
+    answers={};graded=false;lastGrade=null;archivedAttempt=false;
     $('scoreBox').classList.remove('show');
     shuffleQuestions();renderQ();updateSide();
     toast('Новый бланк · порядок вопросов обновлён');
