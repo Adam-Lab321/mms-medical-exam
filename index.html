@@ -474,6 +474,10 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
 }
 .dbg-fill-all:hover{opacity:1}
 /* ===== MMS_DEBUG_FILL_END ===== */
+
+#failScreen{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);padding:16px}
+#failScreen.show{display:flex}
+#failScreen .modal-card{background:linear-gradient(165deg,#16130f,#0c0a08);border:1px solid rgba(248,113,113,.35);border-radius:14px;padding:22px 18px}
 </style>
 </head>
 <body>
@@ -507,6 +511,10 @@ body.fx-hidden *,body.fx-hidden *::after{animation-play-state:paused!important}
 
 <div class="tour" id="tour">
   <div class="tour-card">
+    <div class="about-mms" style="text-align:left;margin-bottom:12px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:rgba(212,175,55,.06)">
+      <div style="color:var(--gold);font-weight:600;margin-bottom:4px">О MMS</div>
+      <p style="font-size:.82rem;color:var(--muted);line-height:1.4;margin:0">Military Medical Service · S.A.N.G. — полевая медицина: зоны ПМП, реанимация, эвакуация. Экзамен проверяет знание памятки перед допуском к службе.</p>
+    </div>
     <h2 class="wave-target">Как пройти экзамен</h2>
     <ol class="tour-ol wave-list">
       <li><b>Памятка</b> — кнопка сверху, окно можно двигать и свернуть.</li>
@@ -692,7 +700,7 @@ function shuffleQuestions(){
 }
 
 (function(){
-  var SP='mmsExamProfile_v35', SA='mmsExamArchive_v35', TOUR='mmsExamTourSeen_v35';
+  var SP='mmsExamProfile_v35', SA='mmsExamArchive_v35', TOUR='mmsExamTourSeen_v35', PROG='mmsExamProgress_v35';
   var answers={}, graded=false, lastGrade=null, videoLoaded=false;
   function $(id){return document.getElementById(id)}
   function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2600)}
@@ -700,6 +708,25 @@ function shuffleQuestions(){
   function hub(){try{var h=new URLSearchParams(location.search).get('hub');if(h)return h}catch(e){}return CONFIG.HUB}
   function loadP(){try{var o=JSON.parse(localStorage.getItem(SP)||'null');if(o&&o.first&&o.sid)return o}catch(e){}return null}
   function saveP(p){localStorage.setItem(SP,JSON.stringify(p))}
+  function saveProgress(){
+    try{
+      var p=loadP(); if(!p) return;
+      localStorage.setItem(PROG, JSON.stringify({
+        sid:p.sid, answers:answers, at:Date.now()
+      }));
+    }catch(e){}
+  }
+  function loadProgress(){
+    try{
+      var p=loadP(); if(!p) return null;
+      var raw=localStorage.getItem(PROG); if(!raw) return null;
+      var o=JSON.parse(raw);
+      if(!o||String(o.sid)!==String(p.sid)) return null;
+      return o;
+    }catch(e){return null}
+  }
+  function clearProgress(){ try{ localStorage.removeItem(PROG);}catch(e){} }
+
   function loadA(){try{var a=JSON.parse(localStorage.getItem(SA)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
   function saveA(list){localStorage.setItem(SA,JSON.stringify(list.slice(0,30)))}
   function decodeKey(){return _p.map(function(v,i){return ((v-3-(i%3))^7)})}
@@ -975,6 +1002,13 @@ function shuffleQuestions(){
     if(answeredCount()<CONFIG.MIN_FOR_RESULT){toast('Нужно минимум 13');return}
     revealAllQuestions();
     var g=grade();graded=true;lastGrade=g;applyMarks(g);updateSide();updateFeedUI();toast('Баллы: '+g.score+'/15');
+    if(g.score<15){
+      try{
+        var fs=$('failScreen'), ft=$('failText');
+        if(ft) ft.textContent='Ваш результат: '+g.score+' из 15. Для отправки нужно 15/15. Разберите ошибки (✗) по памятке и нажмите «Новая попытка».';
+        if(fs){ fs.style.display='flex'; fs.classList.add('show'); }
+      }catch(e){}
+    }
   }
 
   function archiveCurrent(extra){
@@ -1102,6 +1136,7 @@ function shuffleQuestions(){
   function enter(){
     var first=($('gateFirst').value||'').trim(),last=($('gateLast').value||'').trim(),sid=($('gateSid').value||'').replace(/[^\d]/g,'');
     if(!first||!last){$('gateErr').textContent='Укажите имя и фамилию';return}
+    if(/\d/.test(first)||/\d/.test(last)){$('gateErr').textContent='В имени и фамилии не должно быть цифр (как в нике Discord)';return}
     if(!sid||sid.length<3){$('gateErr').textContent='Static ID — цифры, мин. 3';return}
     $('gateErr').textContent='';saveP({first:first,last:last,sid:sid,at:Date.now()});start(true);
   }
@@ -1110,7 +1145,12 @@ function shuffleQuestions(){
     $('gate').classList.add('hidden');$('app').classList.add('show');
     $('userChip').innerHTML='<b>'+esc(p.first+' '+p.last)+'</b> · ID '+esc(p.sid);
     $('gateBack').href=hub();$('linkDoor').href=hub();
-    shuffleQuestions();renderQ();updateSide();renderArch();
+    shuffleQuestions();
+    try{
+      var pr=loadProgress();
+      if(pr&&pr.answers){ answers=pr.answers; }
+    }catch(e){}
+    renderQ();updateSide();renderArch();
     if(fromLogin&&!localStorage.getItem(TOUR))$('tour').classList.add('show');
   }
 
