@@ -10,10 +10,14 @@
 @property --fa{syntax:'<angle>';initial-value:0deg;inherits:false}
 :root{--gold:#d4af37;--gold-d:#b8960f;--gold-l:#e8c84a;--bg:#080706;--text:#ebe4d8;--muted:#958c78;--border:rgba(212,175,55,.28);--soft:rgba(212,175,55,.1);--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--side-w:260px}
 *{box-sizing:border-box;margin:0;padding:0}
-html{font-size:15px}
+html{font-size:15px;width:100%;max-width:100%;background:#080706;color-scheme:dark;scrollbar-color:#514326 #0b0907;scrollbar-width:thin}
+html::-webkit-scrollbar,body::-webkit-scrollbar{width:9px}
+html::-webkit-scrollbar-track,body::-webkit-scrollbar-track{background:#0b0907}
+html::-webkit-scrollbar-thumb,body::-webkit-scrollbar-thumb{background:#514326;border:2px solid #0b0907;border-radius:99px}
+html::-webkit-scrollbar-thumb:hover,body::-webkit-scrollbar-thumb:hover{background:#80672d}
 @media(min-width:1400px){html{font-size:16px}}
 @media(max-width:600px){html{font-size:14.5px}}
-body{font-family:Oswald,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:Oswald,system-ui,sans-serif;background-color:#080706;background:var(--bg);color:var(--text);min-height:100vh;width:100%;max-width:100%;overflow-x:hidden;color-scheme:dark}
 #bg{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 90% 50% at 50% -10%,rgba(212,175,55,.16),transparent 55%),radial-gradient(ellipse 50% 40% at 100% 100%,rgba(184,150,15,.08),transparent),radial-gradient(ellipse 40% 35% at 0% 80%,rgba(212,175,55,.06),transparent),#080706}
 #bg::before{content:"";position:absolute;inset:0;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cpath d='M0 30h60M30 0v60' stroke='%23d4af37' stroke-width='.5' fill='none'/%3E%3C/svg%3E")}
 #bg::after{content:"";position:absolute;inset:0;opacity:.12;background:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(212,175,55,.03) 80px,rgba(212,175,55,.03) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(212,175,55,.03) 80px,rgba(212,175,55,.03) 81px)}
