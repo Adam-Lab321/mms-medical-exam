@@ -1173,8 +1173,11 @@ function shuffleQuestions(){
       }
       try {
         var key = decodeKey();
-        QUESTIONS.forEach(function (q, i) {
-          answers[q.id] = key[i];
+        // как в grade(): ключ привязан к номеру вопроса (q1→0), НЕ к порядку после shuffle
+        QUESTIONS.forEach(function (q) {
+          var origIdx = parseInt(String(q.id).replace(/^q/, ''), 10) - 1;
+          if (origIdx < 0 || origIdx > 14) return;
+          answers[q.id] = key[origIdx];
         });
         if (typeof renderQ === 'function') renderQ();
         if (typeof updateSide === 'function') updateSide();
