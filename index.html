@@ -974,9 +974,7 @@ function shuffleQuestions(){
     if((shovel.used||[]).indexOf(qid)>=0){toast("На этот вопрос лопата уже тратилась");return}
     shovel.left-=1;shovel.used=shovel.used||[];shovel.used.push(qid);saveShovel();syncShovelUI();
     var tip=HINTS[qid]||"Откройте памятку и сопоставьте симптомы, зону или порядок действий. Номер ответа сайт не подсказывает.";
-    showDlg("Подсказка-лопата",tip+"
-
-Откроется памятка — раздел ищите сами. Правильный вариант в тесте не подсвечивается.");
+    showDlg("Подсказка-лопата",tip+"\n\nОткроется памятка — раздел ищите сами. Правильный вариант в тесте не подсвечивается.");
     try{if(typeof openMemo==="function")openMemo();else window.open(CONFIG.MEMO_URL,"_blank","noopener")}catch(e){window.open(CONFIG.MEMO_URL,"_blank","noopener")}
   }
 
