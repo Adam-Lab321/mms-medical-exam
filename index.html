@@ -599,6 +599,9 @@ html[data-fs="xl"]{font-size:20px}
 .arch-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .arch-tabs .btn{font-size:.8rem;padding:6px 10px}
 .arch-tabs .btn.on{border-color:var(--gold);color:var(--gold)}
+.arch-item{border-bottom:1px solid rgba(255,255,255,.06);padding:10px 0}
+.arch-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.9rem}
+.arch-row .btn{font-size:.75rem;padding:5px 10px;flex:none}
 .arch-item .arch-ops{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
 .arch-item .arch-ops .btn{font-size:.75rem;padding:5px 8px}
 /* защита только блока вопросов */
@@ -822,7 +825,7 @@ html[data-fs="xl"]{font-size:20px}
         <div class="video-actions"><a class="alt-link" style="margin-left:0" href="https://www.youtube.com/watch?v=FLyT1oTmfJg" target="_blank" rel="noopener">Запасной вариант: открыть на YouTube ↗</a></div>
       </section>
       <div class="shovel-bar" id="shovelBar" hidden>
-        <span class="sh-left">Подсказки-лопаты: <b id="shovelLeft">0</b> / 3</span>
+        <span class="sh-left">Подсказки: <b id="shovelLeft">0</b> / 3</span>
         <button type="button" class="btn btn-shovel" id="shovelInfo">Как работают</button>
         <span class="sh-used" id="shovelUsed"></span>
       </div>
@@ -951,10 +954,11 @@ function shuffleQuestions(){
   function saveTrash(list){try{localStorage.setItem(SA_TRASH,JSON.stringify((list||[]).slice(0,50)))}catch(e){}}
   function unlockShovels(){
     if(shovel.unlocked){syncShovelUI();return}
-    shovel.unlocked=true;if(typeof shovel.left!=="number"||shovel.left<0)shovel.left=3;
-    if(!Array.isArray(shovel.used))shovel.used=[];
-    if(shovel.left===0&&shovel.used.length===0)shovel.left=3;
-    saveShovel();syncShovelUI();toast("Бонус: 3 подсказки-лопаты к памятке");
+    shovel.unlocked=true;
+    shovel.left=3;
+    shovel.used=[];
+    saveShovel();syncShovelUI();
+    toast("Бонус: 3 подсказки на весь тест. Повторный просмотр видео не добавит новых — распоряжайтесь с умом");
   }
   function syncShovelUI(){
     var bar=$("shovelBar");if(!bar)return;
@@ -966,15 +970,15 @@ function shuffleQuestions(){
       var id=b.getAttribute("data-qid");
       var spent=(shovel.used||[]).indexOf(id)>=0;
       b.disabled=!shovel.unlocked||!(shovel.left>0)||spent||graded;
-      b.textContent=spent?"Лопата использована":((shovel.left>0)?"Лопата · открыть памятку":"Нет лопат");
+      b.textContent=spent?"Подсказка использована":((shovel.left>0)?"Подсказка · открыть памятку":"Нет подсказок");
     });
   }
   function useShovel(qid){
     if(!shovel.unlocked||!(shovel.left>0)||graded)return;
-    if((shovel.used||[]).indexOf(qid)>=0){toast("На этот вопрос лопата уже тратилась");return}
+    if((shovel.used||[]).indexOf(qid)>=0){toast("На этот вопрос подсказка уже использована");return}
     shovel.left-=1;shovel.used=shovel.used||[];shovel.used.push(qid);saveShovel();syncShovelUI();
     var tip=HINTS[qid]||"Откройте памятку и сопоставьте симптомы, зону или порядок действий. Номер ответа сайт не подсказывает.";
-    showDlg("Подсказка-лопата",tip+"\n\nОткроется памятка — раздел ищите сами. Правильный вариант в тесте не подсвечивается.");
+    showDlg("Подсказка",tip+"\n\nОткроется памятка — раздел ищите сами. Правильный вариант в тесте не подсвечивается.");
     try{if(typeof openMemo==="function")openMemo();else window.open(CONFIG.MEMO_URL,"_blank","noopener")}catch(e){window.open(CONFIG.MEMO_URL,"_blank","noopener")}
   }
 
@@ -1680,7 +1684,7 @@ function cardHTML(q,i,delay){
     var shBtn='';
     if(shovel.unlocked){
       var spent=(shovel.used||[]).indexOf(q.id)>=0;
-      shBtn='<button type="button" class="btn btn-shovel-q" data-qid="'+q.id+'"'+(spent||!(shovel.left>0)||graded?' disabled':'')+'>'+(spent?'Лопата использована':'Лопата · открыть памятку')+'</button>';
+      shBtn='<button type="button" class="btn btn-shovel-q" data-qid="'+q.id+'"'+(spent||!(shovel.left>0)||graded?' disabled':'')+'>'+(spent?'Подсказка использована':'Подсказка · открыть памятку')+'</button>';
     }
     return '<article class="q-card'+(picked!==null?' filled':'')+enter+'" id="card-'+q.id+'" data-idx="'+i+'">'+AI_HIDDEN+
       '<div class="q-num">'+t('q_of').replace('{n}',(i+1))+'</div><div class="q-text">'+antiFindText(q.text)+'</div><div class="opts">'+opts+'</div>'+shBtn+'<div class="mark" id="mk-'+q.id+'"></div></article>';
@@ -1862,21 +1866,26 @@ function cardHTML(q,i,delay){
     if(archTab==='list'){
       if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem">Пока пусто</div>';return}
       el.innerHTML=list.map(function(a){
-        return '<details class="arch-item" data-id="'+esc(a.id)+'"><summary><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
-          '</span><span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></summary><div class="arch-detail">'+rowsHtml(a)+
-          '<div class="arch-ops"><button type="button" class="btn arch-del" data-id="'+esc(a.id)+'">В корзину</button></div></div></details>';
+        return '<div class="arch-item" data-id="'+esc(a.id)+'">'+
+          '<div class="arch-row"><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
+          ' <span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></span>'+
+          '<button type="button" class="btn arch-del" data-id="'+esc(a.id)+'">В корзину</button></div>'+
+          '<details><summary style="cursor:pointer;color:var(--muted);font-size:.8rem">Подробности</summary><div class="arch-detail">'+rowsHtml(a)+'</div></details></div>';
       }).join('');
     } else {
       if(!trash.length){tr.innerHTML='<div style="color:var(--muted);font-size:.85rem">Корзина пуста</div>';return}
       tr.innerHTML=trash.map(function(a){
-        return '<details class="arch-item" data-id="'+esc(a.id)+'"><summary><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
-          '</span><span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></summary><div class="arch-detail">'+rowsHtml(a)+
-          '<div class="arch-ops"><button type="button" class="btn arch-restore" data-id="'+esc(a.id)+'">Вернуть</button>'+
-          '<button type="button" class="btn arch-purge" data-id="'+esc(a.id)+'">Удалить навсегда</button></div></div></details>';
+        return '<div class="arch-item" data-id="'+esc(a.id)+'">'+
+          '<div class="arch-row"><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
+          ' <span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></span>'+
+          '<div class="arch-ops" style="display:inline-flex">'+
+          '<button type="button" class="btn arch-restore" data-id="'+esc(a.id)+'">Вернуть</button> '+
+          '<button type="button" class="btn arch-purge" data-id="'+esc(a.id)+'">Удалить</button></div></div>'+
+          '<details><summary style="cursor:pointer;color:var(--muted);font-size:.8rem">Подробности</summary><div class="arch-detail">'+rowsHtml(a)+'</div></details></div>';
       }).join('');
     }
   }
-  function archDelete(id){
+function archDelete(id){
     var list=loadA(),item=null,next=[];
     list.forEach(function(a){if(a.id===id)item=a;else next.push(a)});
     if(!item)return;
@@ -2121,7 +2130,7 @@ function cardHTML(q,i,delay){
     if(t.classList.contains('arch-purge')){e.preventDefault();archPurge(t.getAttribute('data-id'))}
   });
   if($('shovelInfo'))$('shovelInfo').onclick=function(){
-    showDlg('Подсказки-лопаты','За просмотр обучающего видео (от ~50%) открываются 3 подсказки.\n\nЛопата не называет номер ответа: она указывает раздел памятки или направление мысли. На один вопрос — одна лопата.');
+    showDlg('Подсказки','За просмотр обучающего видео (примерно с половины) открываются 3 подсказки на весь тест.\n\nПовторный просмотр видео новые подсказки не даёт. Распоряжайтесь с умом.\n\nПодсказка не называет номер ответа — только раздел памятки или направление. На один вопрос — не больше одной подсказки.');
   };
   document.addEventListener('click',function(e){
     var b=e.target&&e.target.closest&&e.target.closest('.btn-shovel-q');
