@@ -70,7 +70,6 @@ a{color:var(--gold)}
 .side-msg.ready{border-color:rgba(74,222,128,.3);color:var(--ok)}
 .side-msg.wait{border-color:rgba(251,191,36,.28);color:var(--warn)}
 .side-actions{display:flex;flex-direction:column;gap:6px}
-.btn-test{border-style:dashed;color:var(--muted);font-size:.78rem;opacity:.85}
 .score-box{display:none;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px}
 .score-box.show{display:block}
 .score-box .s{font-size:1.5rem;font-weight:700;color:var(--gold)}
@@ -853,8 +852,6 @@ html[data-fs="xl"]{font-size:20px}
           <div class="slide-submit__done">Отправлено ✓</div>
         </div>
         <button type="button" class="btn" id="btnNew">Новая попытка</button>
-        <!-- TEST-CHEAT: удалить кнопку и блок fillCorrect перед релизом -->
-        <button type="button" class="btn btn-test" id="btnCheat" title="ВРЕМЕННО · удалить перед релизом">⚡ Верные ответы (тест)</button>
       </div>
     </aside>
   </div>
@@ -2062,6 +2059,8 @@ function archDelete(id){
       }catch(e2){showDlg('Нет связи','Worker недоступен. Попробуйте позже.');return}
     }
     archiveCurrent({submitted:true});
+    clearProgress();
+    answers={};graded=false;lastGrade=null;
     showCongrats(p,!!(CONFIG.USE_WEBHOOK||CONFIG.USE_WORKER));
   }
 
@@ -2070,6 +2069,7 @@ function archDelete(id){
       if(graded||answeredCount()>=CONFIG.MIN_FOR_RESULT){if(!graded)lastGrade=grade();archiveCurrent({})}
     }
     answers={};graded=false;lastGrade=null;
+    clearProgress();
     $('scoreBox').classList.remove('show');
     shuffleQuestions();renderQ();updateSide();
     toast('Новый бланк · порядок вопросов обновлён');
@@ -2091,7 +2091,11 @@ function archDelete(id){
     shuffleQuestions();
     try{
       var pr=loadProgress();
-      if(pr&&pr.answers){ answers=pr.answers; }
+      if(pr&&pr.answers){
+        var age=Date.now()-(Number(pr.at)||0);
+        if(age>0 && age<24*60*60*1000){ answers=pr.answers; }
+        else { clearProgress(); }
+      }
     }catch(e){}
     renderQ();updateSide();renderArch();
     if(fromLogin&&!localStorage.getItem(TOUR))$('tour').classList.add('show');
@@ -2102,20 +2106,6 @@ function archDelete(id){
   $('btnLogout').onclick=function(){localStorage.removeItem(SP);location.reload()};
   $('btnResult').onclick=doResult;$('btnSubmit').onclick=doSubmit;$('btnNew').onclick=doNew;
 
-  /* TEST-CHEAT:start — удалить этот блок вместе с #btnCheat в HTML перед релизом */
-  function fillCorrect(){
-    if(graded){toast('Уже проверено — нажмите «Новая попытка»');return}
-    var key=decodeKey();
-    QUESTIONS.forEach(function(q){
-      var oi=parseInt(String(q.id).replace(/^q/,''),10)-1;
-      answers[q.id]=Number(key[oi]);
-    });
-    if(typeof saveProgress==='function')saveProgress();
-    renderQ();updateSide();
-    toast('Тест: все 15 верных ответов выставлены');
-  }
-  if($('btnCheat'))$('btnCheat').onclick=fillCorrect;
-  /* TEST-CHEAT:end */
 
   $('btnArch').onclick=function(){archTab='list';renderArch();$('archModal').classList.add('show')};
   $('archClose').onclick=function(){$('archModal').classList.remove('show')};
