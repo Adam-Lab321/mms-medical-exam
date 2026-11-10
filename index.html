@@ -583,6 +583,24 @@ html[data-fs="xl"]{font-size:20px}
   #congrats.show .cg-medal,#congrats.show .cg-medal path,.arch-badge.bump,#btnArch.arch-hit{animation:none}
 }
 
+/* shovel + CTA + archive trash */
+.shovel-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px;padding:10px 12px;border:1px solid rgba(212,175,55,.35);border-radius:10px;background:rgba(212,175,55,.08)}
+.shovel-bar[hidden]{display:none!important}
+.shovel-bar b{color:var(--gold)}
+.shovel-bar .sh-left{font-size:.85rem}
+.shovel-bar .sh-used{font-size:.75rem;color:var(--muted)}
+.btn-shovel{padding:6px 10px;font-size:.78rem;border-style:dashed}
+.q-card .btn-shovel-q{margin-top:8px;font-size:.78rem;padding:7px 10px}
+.mms-cta{display:none;position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:11050;width:min(400px,calc(100vw - 24px));padding:14px 16px;background:linear-gradient(165deg,#1a1610,#0e0c0a);border:1px solid rgba(212,175,55,.45);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.55)}
+.mms-cta.show{display:block}
+.mms-cta h4{color:var(--gold);font-size:1rem;margin-bottom:6px}
+.mms-cta p{font-size:.85rem;color:var(--muted);line-height:1.4;margin-bottom:10px}
+.mms-cta .cta-act{display:flex;gap:8px;flex-wrap:wrap}
+.arch-tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.arch-tabs .btn{font-size:.8rem;padding:6px 10px}
+.arch-tabs .btn.on{border-color:var(--gold);color:var(--gold)}
+.arch-item .arch-ops{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.arch-item .arch-ops .btn{font-size:.75rem;padding:5px 8px}
 /* защита только блока вопросов */
 #mmsShield{
   position:fixed;z-index:9000;background:#050403;display:none;pointer-events:none;
@@ -709,13 +727,28 @@ html[data-fs="xl"]{font-size:20px}
 
 <div class="modal" id="archModal">
   <div class="modal-card">
-    <button type="button" class="btn" id="archClose" style="float:right">✕</button>
+    <button type="button" class="btn" id="archClose" style="float:right">X</button>
     <h3>Архив попыток</h3>
     <p style="color:var(--muted);font-size:.8rem;margin-bottom:10px">Только на этом устройстве.</p>
+    <div class="arch-tabs">
+      <button type="button" class="btn on" id="archTabList">Записи</button>
+      <button type="button" class="btn" id="archTabTrash">Корзина</button>
+    </div>
     <div id="archiveList"></div>
+    <div id="archiveTrash" hidden></div>
+    <div style="margin-top:10px">
+      <button type="button" class="btn" id="archEmptyTrash" hidden>Очистить корзину</button>
+    </div>
   </div>
 </div>
-
+<div class="mms-cta" id="mmsCta" role="dialog">
+  <h4>Интересен Military Medical Service?</h4>
+  <p>Короткий ролик — витрина отдела. Если откликается — загляни через «Дверь MMS» или напиши командованию.</p>
+  <div class="cta-act">
+    <a class="btn btn-gold" id="mmsCtaDoor" href="#" style="width:auto;text-decoration:none">Дверь MMS</a>
+    <button type="button" class="btn" id="mmsCtaClose">Позже</button>
+  </div>
+</div>
 <div class="memo-win" id="memoWin" role="dialog" aria-label="Памятка">
   <div class="memo-titlebar" id="memoDrag">
     <span class="ttl">📖 Памятка по медицине</span>
@@ -788,6 +821,11 @@ html[data-fs="xl"]{font-size:20px}
         </div>
         <div class="video-actions"><a class="alt-link" style="margin-left:0" href="https://www.youtube.com/watch?v=FLyT1oTmfJg" target="_blank" rel="noopener">Запасной вариант: открыть на YouTube ↗</a></div>
       </section>
+      <div class="shovel-bar" id="shovelBar" hidden>
+        <span class="sh-left">Подсказки-лопаты: <b id="shovelLeft">0</b> / 3</span>
+        <button type="button" class="btn btn-shovel" id="shovelInfo">Как работают</button>
+        <span class="sh-used" id="shovelUsed"></span>
+      </div>
       <div id="questions"></div>
     </div>
     <aside class="side">
@@ -901,6 +939,47 @@ function shuffleQuestions(){
 (function(){
   var SP='mmsExamProfile_v35', SA='mmsExamArchive_v35', TOUR='mmsExamTourSeen_v35', PROG='mmsExamProgress_v35';
   var answers={}, graded=false, lastGrade=null, videoLoaded=false;
+  var ST_VID="mmsExamVideoFlags_v1", ST_SH="mmsExamShovel_v1", SA_TRASH="mmsExamArchiveTrash_v35";
+  var videoFlags={trainingOpen:false,trainingHalf:false,aboutOpen:false,aboutDone:false};
+  var shovel={unlocked:false, left:0, used:[]};
+  var archTab="list";
+  try{var _vf=JSON.parse(localStorage.getItem(ST_VID)||"null");if(_vf&&typeof _vf==="object")videoFlags=Object.assign(videoFlags,_vf)}catch(e){}
+  try{var _sh=JSON.parse(localStorage.getItem(ST_SH)||"null");if(_sh&&typeof _sh==="object")shovel=Object.assign(shovel,_sh)}catch(e){}
+  function saveVideoFlags(){try{localStorage.setItem(ST_VID,JSON.stringify(videoFlags))}catch(e){}}
+  function saveShovel(){try{localStorage.setItem(ST_SH,JSON.stringify(shovel))}catch(e){}}
+  function loadTrash(){try{var a=JSON.parse(localStorage.getItem(SA_TRASH)||"[]");return Array.isArray(a)?a:[]}catch(e){return[]}}
+  function saveTrash(list){try{localStorage.setItem(SA_TRASH,JSON.stringify((list||[]).slice(0,50)))}catch(e){}}
+  function unlockShovels(){
+    if(shovel.unlocked){syncShovelUI();return}
+    shovel.unlocked=true;if(typeof shovel.left!=="number"||shovel.left<0)shovel.left=3;
+    if(!Array.isArray(shovel.used))shovel.used=[];
+    if(shovel.left===0&&shovel.used.length===0)shovel.left=3;
+    saveShovel();syncShovelUI();toast("Бонус: 3 подсказки-лопаты к памятке");
+  }
+  function syncShovelUI(){
+    var bar=$("shovelBar");if(!bar)return;
+    bar.hidden=!(shovel.unlocked&&!graded);
+    if($("shovelLeft"))$("shovelLeft").textContent=String(shovel.left||0);
+    var used=(shovel.used||[]).map(function(id){return String(id).replace(/^q/,"№")}).join(", ");
+    if($("shovelUsed"))$("shovelUsed").textContent=used?("Уже: "+used):"";
+    document.querySelectorAll(".btn-shovel-q").forEach(function(b){
+      var id=b.getAttribute("data-qid");
+      var spent=(shovel.used||[]).indexOf(id)>=0;
+      b.disabled=!shovel.unlocked||!(shovel.left>0)||spent||graded;
+      b.textContent=spent?"Лопата использована":((shovel.left>0)?"Лопата · открыть памятку":"Нет лопат");
+    });
+  }
+  function useShovel(qid){
+    if(!shovel.unlocked||!(shovel.left>0)||graded)return;
+    if((shovel.used||[]).indexOf(qid)>=0){toast("На этот вопрос лопата уже тратилась");return}
+    shovel.left-=1;shovel.used=shovel.used||[];shovel.used.push(qid);saveShovel();syncShovelUI();
+    var tip=HINTS[qid]||"Откройте памятку и сопоставьте симптомы, зону или порядок действий. Номер ответа сайт не подсказывает.";
+    showDlg("Подсказка-лопата",tip+"
+
+Откроется памятка — раздел ищите сами. Правильный вариант в тесте не подсвечивается.");
+    try{if(typeof openMemo==="function")openMemo();else window.open(CONFIG.MEMO_URL,"_blank","noopener")}catch(e){window.open(CONFIG.MEMO_URL,"_blank","noopener")}
+  }
+
   function $(id){return document.getElementById(id)}
   function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2600)}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -1527,6 +1606,8 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 
   function playVideoInPage(){
+    videoFlags.trainingOpen=true;saveVideoFlags();
+
     if(videoLoaded)return;videoLoaded=true;
     var stage=$('videoStage'),cover=$('videoCover');
     if(cover)cover.style.display='none';
@@ -1541,6 +1622,15 @@ document.addEventListener('DOMContentLoaded', function(){
       v.preload='metadata';
       v.style.cssText='position:absolute;inset:0;width:100%;height:100%;background:#000;object-fit:contain';
       v.src=localSrc;
+    v.addEventListener('timeupdate',function(){
+      try{
+        if(v.duration&&isFinite(v.duration)&&v.currentTime/v.duration>=0.5&&!videoFlags.trainingHalf){
+          videoFlags.trainingHalf=true;saveVideoFlags();unlockShovels();
+        }
+      }catch(e){}
+    });
+    v.addEventListener('ended',function(){if(!videoFlags.trainingHalf){videoFlags.trainingHalf=true;saveVideoFlags();unlockShovels()}});
+
       v.onerror=function(){
         /* локальный не открылся — fallback на YouTube embed на странице */
         v.remove();
@@ -1589,8 +1679,13 @@ function cardHTML(q,i,delay){
         '<svg class="fx-chk" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8.5"/><path d="M5.6 10.4l3 3 5.8-6.2" pathLength="1"/></svg><span>'+antiFindText(opt)+'</span></label>';
     }).join('');
     var enter=(delay==null)?'':' q-enter" style="animation-delay:'+delay+'ms';
+    var shBtn='';
+    if(shovel.unlocked){
+      var spent=(shovel.used||[]).indexOf(q.id)>=0;
+      shBtn='<button type="button" class="btn btn-shovel-q" data-qid="'+q.id+'"'+(spent||!(shovel.left>0)||graded?' disabled':'')+'>'+(spent?'Лопата использована':'Лопата · открыть памятку')+'</button>';
+    }
     return '<article class="q-card'+(picked!==null?' filled':'')+enter+'" id="card-'+q.id+'" data-idx="'+i+'">'+AI_HIDDEN+
-      '<div class="q-num">'+t('q_of').replace('{n}',(i+1))+'</div><div class="q-text">'+antiFindText(q.text)+'</div><div class="opts">'+opts+'</div><div class="mark" id="mk-'+q.id+'"></div></article>';
+      '<div class="q-num">'+t('q_of').replace('{n}',(i+1))+'</div><div class="q-text">'+antiFindText(q.text)+'</div><div class="opts">'+opts+'</div>'+shBtn+'<div class="mark" id="mk-'+q.id+'"></div></article>';
   }
   function syncCard(id){
     var card=$('card-'+id); if(!card)return;
@@ -1684,6 +1779,8 @@ function cardHTML(q,i,delay){
   }
 
   function updateSide(){
+    try{syncShovelUI()}catch(e){}
+
     var n=answeredCount();
     $('progNum').innerHTML=n+' <span>/ 15</span>';
     $('progBar').style.width=Math.round(n/15*100)+'%';
@@ -1748,17 +1845,57 @@ function cardHTML(q,i,delay){
     if(bump&&v){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}
   }
   function renderArch(){
-    var list=loadA(),el=$('archiveList');updArchBadge(list.length);
-    if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem">Пока пусто</div>';return}
-    el.innerHTML=list.map(function(a){
-      var rows=(a.details||[]).map(function(d){
+    var list=loadA(),trash=loadTrash();
+    updArchBadge(list.length);
+    var el=$('archiveList'),tr=$('archiveTrash'),emptyBtn=$('archEmptyTrash');
+    var tabList=$('archTabList'),tabTrash=$('archTabTrash');
+    if(tabList)tabList.classList.toggle('on',archTab==='list');
+    if(tabTrash)tabTrash.classList.toggle('on',archTab==='trash');
+    if(el)el.hidden=archTab!=='list';
+    if(tr)tr.hidden=archTab!=='trash';
+    if(emptyBtn)emptyBtn.hidden=archTab!=='trash'||!trash.length;
+    function rowsHtml(a){
+      return (a.details||[]).map(function(d){
         var sym=d.missing?'—':(d.ok?'✓':'✗'),ic=d.ok?'ok':'bad';
         return '<div class="row"><span class="ic '+ic+'">'+sym+'</span><div><b>№'+d.n+'</b> · '+esc(d.question)+
           (d.pickText?'<div style="color:var(--muted);margin-top:2px">Ваш ответ: '+esc(d.pickText)+'</div>':'<div style="color:var(--bad)">Нет ответа</div>')+'</div></div>';
       }).join('');
-      return '<details class="arch-item"><summary><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
-        '</span><span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></summary><div class="arch-detail">'+rows+'</div></details>';
-    }).join('');
+    }
+    if(archTab==='list'){
+      if(!list.length){el.innerHTML='<div style="color:var(--muted);font-size:.85rem">Пока пусто</div>';return}
+      el.innerHTML=list.map(function(a){
+        return '<details class="arch-item" data-id="'+esc(a.id)+'"><summary><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
+          '</span><span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></summary><div class="arch-detail">'+rowsHtml(a)+
+          '<div class="arch-ops"><button type="button" class="btn arch-del" data-id="'+esc(a.id)+'">В корзину</button></div></div></details>';
+      }).join('');
+    } else {
+      if(!trash.length){tr.innerHTML='<div style="color:var(--muted);font-size:.85rem">Корзина пуста</div>';return}
+      tr.innerHTML=trash.map(function(a){
+        return '<details class="arch-item" data-id="'+esc(a.id)+'"><summary><span>Попытка · <b>'+a.score+'/'+a.total+'</b>'+(a.submitted?' · отправлено':'')+
+          '</span><span style="color:var(--muted)">'+esc(fmtMsk(a.at))+'</span></summary><div class="arch-detail">'+rowsHtml(a)+
+          '<div class="arch-ops"><button type="button" class="btn arch-restore" data-id="'+esc(a.id)+'">Вернуть</button>'+
+          '<button type="button" class="btn arch-purge" data-id="'+esc(a.id)+'">Удалить навсегда</button></div></div></details>';
+      }).join('');
+    }
+  }
+  function archDelete(id){
+    var list=loadA(),item=null,next=[];
+    list.forEach(function(a){if(a.id===id)item=a;else next.push(a)});
+    if(!item)return;
+    var trash=loadTrash();trash.unshift(item);saveTrash(trash);saveA(next);renderArch();
+  }
+  function archRestore(id){
+    var trash=loadTrash(),item=null,next=[];
+    trash.forEach(function(a){if(a.id===id)item=a;else next.push(a)});
+    if(!item)return;
+    var list=loadA();list.unshift(item);saveA(list);saveTrash(next);renderArch();
+  }
+  function archPurge(id){
+    saveTrash(loadTrash().filter(function(a){return a.id!==id}));renderArch();
+  }
+  function archEmpty(){
+    if(!confirm('Очистить корзину без восстановления?'))return;
+    saveTrash([]);renderArch();
   }
 
   function showDlg(title,text){$('dlgTitle').textContent=title;$('dlgText').textContent=text;$('dlg').classList.add('show')}
@@ -1896,7 +2033,9 @@ function cardHTML(q,i,delay){
     g.details.forEach(function(d){
       lines.push((d.ok?'✅':'❌')+' **№'+d.n+'** · ваш ответ: '+(d.missing?'нет ответа':(d.pickText||'')));
     });
-    return {type:'medical_exam',academic:{first:p.first,last:p.last,sid:p.sid,name:(p.first||'')+' '+(p.last||'')},score:g.score,total:15,details:g.details,discordText:lines.join('\n'),at:new Date().toISOString()};
+    lines.push('');
+    lines.push('Видео (служебно): обучение '+(videoFlags.trainingHalf||videoFlags.trainingOpen?'✓':'✗')+' · о нас '+(videoFlags.aboutOpen||videoFlags.aboutDone?'✓':'✗'));
+    return {type:'medical_exam',academic:{first:p.first,last:p.last,sid:p.sid,name:(p.first||'')+' '+(p.last||'')},score:g.score,total:15,details:g.details,discordText:lines.join('\n'),videos:{training:!!(videoFlags.trainingOpen||videoFlags.trainingHalf),trainingHalf:!!videoFlags.trainingHalf,about:!!(videoFlags.aboutOpen||videoFlags.aboutDone)},at:new Date().toISOString()};
   }
 
   async function doSubmit(){
@@ -1971,9 +2110,30 @@ function cardHTML(q,i,delay){
   if($('btnCheat'))$('btnCheat').onclick=fillCorrect;
   /* TEST-CHEAT:end */
 
-  $('btnArch').onclick=function(){renderArch();$('archModal').classList.add('show')};
+  $('btnArch').onclick=function(){archTab='list';renderArch();$('archModal').classList.add('show')};
   $('archClose').onclick=function(){$('archModal').classList.remove('show')};
   $('archModal').onclick=function(e){if(e.target===$('archModal'))$('archModal').classList.remove('show')};
+  if($('archTabList'))$('archTabList').onclick=function(){archTab='list';renderArch()};
+  if($('archTabTrash'))$('archTabTrash').onclick=function(){archTab='trash';renderArch()};
+  if($('archEmptyTrash'))$('archEmptyTrash').onclick=archEmpty;
+  $('archModal').addEventListener('click',function(e){
+    var t=e.target; if(!t||!t.classList)return;
+    if(t.classList.contains('arch-del')){e.preventDefault();archDelete(t.getAttribute('data-id'))}
+    if(t.classList.contains('arch-restore')){e.preventDefault();archRestore(t.getAttribute('data-id'))}
+    if(t.classList.contains('arch-purge')){e.preventDefault();archPurge(t.getAttribute('data-id'))}
+  });
+  if($('shovelInfo'))$('shovelInfo').onclick=function(){
+    showDlg('Подсказки-лопаты','За просмотр обучающего видео (от ~50%) открываются 3 подсказки.\n\nЛопата не называет номер ответа: она указывает раздел памятки или направление мысли. На один вопрос — одна лопата.');
+  };
+  document.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest&&e.target.closest('.btn-shovel-q');
+    if(b&&!b.disabled)useShovel(b.getAttribute('data-qid'));
+  });
+  if($('mmsCtaClose'))$('mmsCtaClose').onclick=function(){$('mmsCta').classList.remove('show')};
+  if($('mmsCtaDoor')){$('mmsCtaDoor').href=(typeof hub==='function'?hub():CONFIG.HUB)}
+  syncShovelUI();
+  if(videoFlags.trainingHalf){shovel.unlocked=true;if(!(shovel.left>0)&&!(shovel.used||[]).length)shovel.left=3;saveShovel();syncShovelUI()}
+
   $('tourOk').onclick=function(){localStorage.setItem(TOUR,'1');$('tour').classList.remove('show')};
   $('btnPlay').onclick=playVideoInPage;$('videoCover').onclick=playVideoInPage;
 
@@ -2251,6 +2411,16 @@ function vOpen(th){
 }
 function vClose(){
   var f=vc.querySelector('iframe,video');if(f)f.remove();
+  try{
+    if(typeof videoFlags!=='undefined'){
+      videoFlags.aboutDone=true;
+      if(typeof saveVideoFlags==='function')saveVideoFlags();
+      if($('mmsCta')&&!sessionStorage.getItem('mmsCtaShown')){
+        sessionStorage.setItem('mmsCtaShown','1');
+        setTimeout(function(){var c=$('mmsCta');if(c)c.classList.add('show')},280);
+      }
+    }
+  }catch(e){}
   if(RM||!vf){vd.classList.remove('show');return}
   var c=vc.getBoundingClientRect();
   vc.animate([{transform:'none',opacity:1},{transform:tr(c,vf),opacity:0}],{duration:320,easing:'ease-in'}).onfinish=function(){vd.classList.remove('show')};
