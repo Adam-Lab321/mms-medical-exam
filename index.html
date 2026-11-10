@@ -70,6 +70,7 @@ a{color:var(--gold)}
 .side-msg.ready{border-color:rgba(74,222,128,.3);color:var(--ok)}
 .side-msg.wait{border-color:rgba(251,191,36,.28);color:var(--warn)}
 .side-actions{display:flex;flex-direction:column;gap:6px}
+.btn-test{border-style:dashed;color:var(--muted);font-size:.78rem;opacity:.85}
 .score-box{display:none;text-align:center;padding:8px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px}
 .score-box.show{display:block}
 .score-box .s{font-size:1.5rem;font-weight:700;color:var(--gold)}
@@ -582,9 +583,30 @@ html[data-fs="xl"]{font-size:20px}
   #congrats.show .cg-medal,#congrats.show .cg-medal path,.arch-badge.bump,#btnArch.arch-hit{animation:none}
 }
 
-/* защита */
-#mmsShield{position:fixed;inset:0;z-index:2147483000;background:#000;display:none;pointer-events:none}
-#mmsWm{position:fixed;inset:0;z-index:8500;pointer-events:none;background-repeat:repeat;display:none}
+/* защита только блока вопросов */
+#mmsShield{
+  position:fixed;z-index:9000;background:#050403;display:none;pointer-events:none;
+  border-radius:12px;border:1px solid rgba(212,175,55,.25);
+  box-shadow:inset 0 0 40px rgba(0,0,0,.8);
+}
+#mmsShotWarn{
+  position:fixed;left:50%;bottom:max(28px,env(safe-area-inset-bottom,0px) + 24px);
+  transform:translateX(-50%) translateY(12px);z-index:12050;
+  width:min(360px,calc(100vw - 28px));padding:14px 16px 14px 14px;
+  background:linear-gradient(165deg,#1a1610,#0e0c0a);
+  border:1px solid rgba(212,175,55,.4);border-radius:14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);color:var(--text);
+  opacity:0;pointer-events:none;transition:opacity .22s ease,transform .22s ease;
+  font-size:.9rem;line-height:1.4;text-align:center;
+}
+#mmsShotWarn.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+#mmsShotWarn .sw-title{color:var(--gold);font-weight:700;font-size:.95rem;margin-bottom:4px}
+#mmsShotWarn .sw-sub{color:var(--muted);font-size:.82rem}
+#mmsShotWarn .sw-x{
+  position:absolute;top:8px;right:10px;width:28px;height:28px;border:0;border-radius:8px;
+  background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;
+}
+#mmsShotWarn .sw-x:hover{color:var(--gold)}
 
 /* нижняя панель телефона */
 .mbar,.msheet{display:none}
@@ -790,7 +812,8 @@ html[data-fs="xl"]{font-size:20px}
           <div class="slide-submit__done">Отправлено ✓</div>
         </div>
         <button type="button" class="btn" id="btnNew">Новая попытка</button>
-        
+        <!-- TEST-CHEAT: удалить кнопку и блок fillCorrect перед релизом -->
+        <button type="button" class="btn btn-test" id="btnCheat" title="ВРЕМЕННО · удалить перед релизом">⚡ Верные ответы (тест)</button>
       </div>
     </aside>
   </div>
@@ -1932,6 +1955,22 @@ function cardHTML(q,i,delay){
   ['gateFirst','gateLast','gateSid'].forEach(function(id){$(id).addEventListener('keydown',function(e){if(e.key==='Enter')enter()})});
   $('btnLogout').onclick=function(){localStorage.removeItem(SP);location.reload()};
   $('btnResult').onclick=doResult;$('btnSubmit').onclick=doSubmit;$('btnNew').onclick=doNew;
+
+  /* TEST-CHEAT:start — удалить этот блок вместе с #btnCheat в HTML перед релизом */
+  function fillCorrect(){
+    if(graded){toast('Уже проверено — нажмите «Новая попытка»');return}
+    var key=decodeKey();
+    QUESTIONS.forEach(function(q){
+      var oi=parseInt(String(q.id).replace(/^q/,''),10)-1;
+      answers[q.id]=Number(key[oi]);
+    });
+    if(typeof saveProgress==='function')saveProgress();
+    renderQ();updateSide();
+    toast('Тест: все 15 верных ответов выставлены');
+  }
+  if($('btnCheat'))$('btnCheat').onclick=fillCorrect;
+  /* TEST-CHEAT:end */
+
   $('btnArch').onclick=function(){renderArch();$('archModal').classList.add('show')};
   $('archClose').onclick=function(){$('archModal').classList.remove('show')};
   $('archModal').onclick=function(e){if(e.target===$('archModal'))$('archModal').classList.remove('show')};
@@ -2476,66 +2515,94 @@ gate.addEventListener('focusin',function(e){
 gate.addEventListener('focusout',function(){setTimeout(kb,120)});
 kb();
 
-/* ---------- защита вопросов от скриншотов ---------- */
+/* ---------- защита только блока вопросов + предупреждение ---------- */
 var sh=document.createElement('div');sh.id='mmsShield';document.body.appendChild(sh);
-var wm=document.createElement('div');wm.id='mmsWm';document.body.appendChild(wm);
-var keyBlack=false,focusBlack=false,hiddenBlack=false,keyT=0,lastWm='';
+var warn=document.createElement('div');warn.id='mmsShotWarn';warn.setAttribute('role','status');
+warn.innerHTML='<button type="button" class="sw-x" aria-label="Закрыть">×</button><div class="sw-title" id="swTitle"></div><div class="sw-sub" id="swSub"></div>';
+document.body.appendChild(warn);
+var keyBlack=false,focusBlack=false,hiddenBlack=false,keyT=0,warnT=0;
 function active(){return $('app').classList.contains('show')&&!$('congrats').classList.contains('show')}
-function render(){
-  var a=active();
-  sh.style.display=(a&&(keyBlack||focusBlack||hiddenBlack))?'block':'none';
-  wm.style.display=a?'block':'none';
-}
-function hold(ms){
-  keyBlack=true;render();clearTimeout(keyT);
-  keyT=setTimeout(function(){keyBlack=false;render()},ms||1200);
-}
-function wmBuild(){
-  var p=null;try{p=JSON.parse(localStorage.getItem('mmsExamProfile_v35')||'null')}catch(e){}
-  var img='none';
-  if(p&&p.first){
-    var txt=(p.first+' '+p.last+' · '+p.sid).replace(/[<>&"']/g,'').slice(0,34);
-    var svg='<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180"><text x="180" y="92" text-anchor="middle" transform="rotate(-24 180 92)" font-family="Oswald,Arial,sans-serif" font-size="14" font-weight="600" letter-spacing="1" fill="#d4af37" fill-opacity="0.09">'+txt+'</text></svg>';
-    img='url("data:image/svg+xml;utf8,'+encodeURIComponent(svg)+'")';
+function placeShield(){
+  var q=$('questions');
+  if(!q||!active()||!(keyBlack||focusBlack||hiddenBlack)){
+    sh.style.display='none';return;
   }
-  if(img!==lastWm||!wm.style.backgroundImage){lastWm=img;wm.style.backgroundImage=img}
+  var r=q.getBoundingClientRect();
+  if(r.width<8||r.height<8){sh.style.display='none';return}
+  sh.style.display='block';
+  sh.style.left=Math.max(0,r.left)+'px';
+  sh.style.top=Math.max(0,r.top)+'px';
+  sh.style.width=r.width+'px';
+  sh.style.height=r.height+'px';
+}
+function render(){placeShield()}
+function showWarn(title,sub){
+  $('swTitle').textContent=title||'Скриншот недоступен';
+  $('swSub').textContent=sub||'Блок с вопросами скрыт. Пройдите экзамен без снимков экрана.';
+  warn.classList.add('show');
+  clearTimeout(warnT);
+  warnT=setTimeout(function(){warn.classList.remove('show')},4200);
+}
+warn.querySelector('.sw-x').onclick=function(){warn.classList.remove('show')};
+function hold(ms,reason){
+  keyBlack=true;render();clearTimeout(keyT);
+  keyT=setTimeout(function(){keyBlack=false;render()},ms||1400);
+  if(reason)showWarn('Скриншот сделать нельзя',reason);
 }
 function clearClip(){try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(' ').catch(function(){})}catch(e){}}
 addEventListener('keydown',function(e){
-  var k=e.key,c=e.code||'';
-  if(k==='Meta'||k==='OS'||c==='MetaLeft'||c==='MetaRight'||(e.metaKey&&e.shiftKey))hold(1500);
-  if(k==='PrintScreen'||c==='PrintScreen'){hold(1500);clearClip()}
   if(!active())return;
-  var cs=e.ctrlKey||e.metaKey;
+  var k=e.key,c=e.code||'',cs=e.ctrlKey||e.metaKey;
+  if(k==='PrintScreen'||c==='PrintScreen'){
+    hold(1600,'Вы нажали Print Screen. Вопросы на время скрыты.');
+    clearClip();return;
+  }
+  if(k==='Meta'||k==='OS'||c==='MetaLeft'||c==='MetaRight'||(e.metaKey&&e.shiftKey)){
+    hold(1500,'Похоже на сочетание для снимка экрана. Вопросы скрыты.');
+    return;
+  }
   if(k==='F12'||(cs&&e.shiftKey&&/^(KeyI|KeyJ|KeyC|KeyK)$/.test(c))||(e.metaKey&&e.altKey&&/^(KeyI|KeyJ|KeyC|KeyU)$/.test(c))||(cs&&/^(KeyU|KeyS|KeyP)$/.test(c))){
-    e.preventDefault();e.stopPropagation();hold(900);
+    e.preventDefault();e.stopPropagation();
+    var label=k==='F12'?'F12':(cs&&c==='KeyS'?'Ctrl/Cmd+S':cs&&c==='KeyP'?'Ctrl/Cmd+P':'инструменты разработчика');
+    hold(1200,'Вы нажали «'+label+'». Вопросы на время скрыты.');
   }
 },true);
 addEventListener('keyup',function(e){
-  if(e.key==='PrintScreen'||e.code==='PrintScreen'){hold(1500);clearClip()}
-  else if(e.key==='Meta'||e.key==='OS')hold(500);
+  if(!active())return;
+  if(e.key==='PrintScreen'||e.code==='PrintScreen'){hold(1600,'Вы нажали Print Screen. Вопросы на время скрыты.');clearClip()}
+  else if(e.key==='Meta'||e.key==='OS')hold(600);
 },true);
 if(FINE){
   var chk=function(){focusBlack=!document.hasFocus();render()};
   addEventListener('blur',function(){
     var ae=document.activeElement;
-    if(!(ae&&ae.tagName==='IFRAME')){focusBlack=true;render()}
+    if(!(ae&&ae.tagName==='IFRAME')){
+      focusBlack=true;render();
+      showWarn('Окно потеряло фокус','Блок вопросов скрыт, пока вы не вернётесь на страницу.');
+    }
     setTimeout(chk,90);
   });
   addEventListener('focus',function(){setTimeout(chk,60)});
 }
-document.addEventListener('visibilitychange',function(){hiddenBlack=document.hidden;render()});
+document.addEventListener('visibilitychange',function(){
+  hiddenBlack=document.hidden;render();
+  if(document.hidden&&active())showWarn('Вкладка скрыта','Вопросы спрятаны. Вернитесь на вкладку экзамена.');
+});
 addEventListener('pagehide',function(){hiddenBlack=true;render()});
 addEventListener('pageshow',function(){hiddenBlack=document.hidden;render()});
-addEventListener('beforeprint',function(){hold(2500)});
-new MutationObserver(function(){wmBuild();render()}).observe($('app'),{attributes:true,attributeFilter:['class']});
-new MutationObserver(function(){wmBuild();render()}).observe($('congrats'),{attributes:true,attributeFilter:['class']});
+addEventListener('beforeprint',function(){
+  if(active())hold(2500,'Печать и снимок через печать недоступны для блока вопросов.');
+});
+addEventListener('scroll',placeShield,{passive:true});
+addEventListener('resize',placeShield);
+new MutationObserver(render).observe($('app'),{attributes:true,attributeFilter:['class']});
+new MutationObserver(render).observe($('congrats'),{attributes:true,attributeFilter:['class']});
 setInterval(function(){
   if(!document.body.contains(sh))document.body.appendChild(sh);
-  if(!document.body.contains(wm))document.body.appendChild(wm);
-  wmBuild();render();
+  if(!document.body.contains(warn))document.body.appendChild(warn);
+  render();
 },1500);
-wmBuild();render();
+render();
 })();
 </script>
 
